@@ -1,5 +1,5 @@
 volumes:
-  frontend-node-modules:
+  frontend-deps:
   backend-node-modules:
   db-data:
 
@@ -10,8 +10,8 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
-      - ./shared:/app/shared
-      - frontend-node-modules:/app/node_modules
+      - ./shared:/app/app/shared
+      - frontend-deps:/app/app/.deps
     ports:
       - "5173:5173"
 
@@ -36,3 +36,7 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+
+networks:
+  default:
+    driver: bridge
