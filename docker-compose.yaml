@@ -9,9 +9,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./frontend:/app
-      - ./shared:/app/app/shared
-      - frontend-deps:/app/app/.deps
+      - ./frontend/app:/app
+      - ./shared:/app/shared
+      - frontend-deps:/app/.deps
     ports:
       - "5173:5173"
 
