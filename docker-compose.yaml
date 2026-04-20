@@ -10,6 +10,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
+      - ./shared:/app/shared
       - frontend-node-modules:/app/node_modules
     ports:
       - "5173:5173"
@@ -20,6 +21,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./backend:/app
+      - ./shared:/app/shared
       - backend-node-modules:/app/node_modules
     ports:
       - "3000:3000"
