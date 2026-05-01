@@ -1,0 +1,33 @@
+# backend/api/Dockerfile.prod
+
+# ==========================================
+# Stage 1: Build (依存関係の解決とバンドル)
+# ==========================================
+FROM node:20-slim AS builder
+
+WORKDIR /build
+
+# 【重要】依存解決のために、types と api のソースを両方コピーする
+# ※このDockerfileは「プロジェクトルート」からビルドされる前提です
+COPY packages/types ./packages/types
+COPY backend/api ./backend/api
+
+WORKDIR /build/backend/api
+
+# npm install と esbuild によるバンドル実行
+# 成果物として dist/index.js が生成される
+RUN npm install
+RUN npm run build
+
+# ==========================================
+# Stage 2: Production (Lambda実行用軽量イメージ)
+# ==========================================
+# AWS公式のLambda用Node.js 20ベースイメージを使用
+FROM public.ecr.aws/lambda/nodejs:20
+
+# Stage 1でバンドルされた index.js 「1ファイルのみ」をコピー
+# Lambdaの作業ルートディレクトリ (${LAMBDA_TASK_ROOT}) に配置します
+COPY --from=builder /build/backend/api/dist/index.js ${LAMBDA_TASK_ROOT}/
+
+# Lambdaのエントリポイントを指定（ファイル名.export名）
+CMD ["index.handler"]

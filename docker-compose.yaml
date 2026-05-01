@@ -26,6 +26,8 @@ services:
       - api-node-modules:/app/node_modules
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=development
 
 networks:
   default:
