@@ -10,10 +10,10 @@ echo "ボリュームの権限を修正中..."
 docker run --rm -v ${PROJECT_NAME}_api-node-modules:/v alpine chown -R $UID_GID /v
 docker run --rm -v ${PROJECT_NAME}_frontend-node-modules:/v alpine chown -R $UID_GID /v
 
-echo "📁 ソースコードの権限を修正中..."
+echo "ソースコードの権限を修正中..."
 docker run --rm -v "$(pwd):/mnt" alpine chown -R $UID_GID /mnt
 
-echo "📦 Backend (API) の依存関係をインストール中..."
+echo "Backend (API) の依存関係をインストール中..."
 docker run --rm \
   -u $UID_GID \
   -v "${PROJECT_NAME}_api-node-modules:/home/node/app/node_modules" \
@@ -23,7 +23,7 @@ docker run --rm \
   node:22-slim \
   npm install
 
-echo "📦 Frontend の依存関係をインストール中..."
+echo "Frontend の依存関係をインストール中..."
 docker run --rm \
   -u $UID_GID \
   -v "${PROJECT_NAME}_frontend-node-modules:/home/node/app/node_modules" \
@@ -33,7 +33,7 @@ docker run --rm \
   node:22-slim \
   npm install
 
-echo "🏗️ コンテナを起動します..."
-docker compose up -d --build
+echo "コンテナを起動します..."
+docker compose up --build
 
-echo "✅ 完了！名前付きボリュームによる高速な開発環境が整いました。"
+echo "完了！"
