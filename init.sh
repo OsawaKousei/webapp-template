@@ -18,7 +18,7 @@ docker run --rm \
   -u $UID_GID \
   -v "${PROJECT_NAME}_api-node-modules:/home/node/app/node_modules" \
   -v "$(pwd)/backend/api/app:/home/node/app" \
-  -v "$(pwd)/shared/types:/home/node/app/types" \
+  -v "$(pwd)/shared/types:/home/node/app/shared/types" \
   -w /home/node/app \
   node:22-slim \
   npm install
@@ -28,7 +28,7 @@ docker run --rm \
   -u $UID_GID \
   -v "${PROJECT_NAME}_frontend-node-modules:/home/node/app/node_modules" \
   -v "$(pwd)/frontend/app:/home/node/app" \
-  -v "$(pwd)/shared/types:/home/node/app/types" \
+  -v "$(pwd)/shared/types:/home/node/app/shared/types" \
   -w /home/node/app \
   node:22-slim \
   npm install

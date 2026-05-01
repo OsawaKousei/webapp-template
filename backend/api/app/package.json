@@ -20,6 +20,6 @@
     "@hono/node-server": "^2.0.1",
     "@hono/zod-validator": "^0.7.6",
     "zod": "^4.4.1",
-    "@my-app/types": "file:./types"
+    "@my-app/types": "file:./shared/types"
   }
 }
