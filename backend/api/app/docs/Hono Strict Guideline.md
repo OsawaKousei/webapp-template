@@ -155,6 +155,8 @@ app.use('\*', pinoLogger({
 Hono RPCは使用せず、型の共有を通じて安全なコントラクトを確立する。
 
 - **ルール:** バックエンドリポジトリに shared/types モジュールを作成し、Zodスキーマから推論された型（z.infer）およびAPIの入出力型をエクスポートする。
+- **ルール:** APIスキーマは `shared/types/<domain>.ts` にドメイン単位で定義し、`shared/types/index.ts` で再エクスポートする。
+- **補足:** `src/features/<domain>/<domain>-schema.ts` を置く場合は、`shared/types` の定義を再エクスポートする薄い橋渡しレイヤーに限定する。
 - **運用:** モノレポ構成（Turborepo等）またはnpmパッケージとして、フロントエンドからこの types モジュールをインポートして利用する。
 
 **8\. ディレクトリ構造 (Directory Structure)**
@@ -169,7 +171,7 @@ src/
   │   └── user/
   │       ├── user-router.ts  \# @hono/zod-openapiによるEndpoint
   │       ├── user-service.ts \# 振る舞い (純粋関数)
-  │       ├── user-schema.ts  \# Zod Schema
+  │       ├── user-schema.ts  \# shared/typesの再エクスポート（任意）
   │       └── user-repo.ts    \# Repository Type定義
   └── infrastructure/         \# 技術的詳細の実装
   　   ├── db/
@@ -177,6 +179,8 @@ src/
        │   └── schema.ts       \# Drizzle Schema
        └── external/           \# 外部API連携
 shared/                 \# フロント/バックエンド共通コンポーネント
-    ├── types/              \# フロントエンド共有用モジュール
+    ├── types/
+    │   ├── user.ts         \# UserドメインのAPIスキーマ
+    │   └── index.ts        \# ドメイン別typesの集約エクスポート
     └── errors/             \# カスタムエラー型 (Result用)
 ```
