@@ -1,10 +1,12 @@
-import { z } from 'zod';
+import { z } from '@hono/zod-openapi';
+
+export const UserStatusSchema = z.union([z.literal('active'), z.literal('inactive')]);
 
 export const UserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: z.string().min(1),
+  name: z.string().min(1),
   email: z.string().email(),
-  status: z.enum(['active', 'inactive']),
+  status: UserStatusSchema,
 });
 
 export const GetUserParamSchema = z.object({

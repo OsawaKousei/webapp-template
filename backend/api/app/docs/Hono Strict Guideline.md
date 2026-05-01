@@ -171,12 +171,12 @@ src/
   │       ├── user-service.ts \# 振る舞い (純粋関数)
   │       ├── user-schema.ts  \# Zod Schema
   │       └── user-repo.ts    \# Repository Type定義
-  ├── infrastructure/         \# 技術的詳細の実装
-  │   ├── db/
-  │   │   ├── drizzle-repo.ts \# Concrete Repository Implementation
-  │   │   └── schema.ts       \# Drizzle Schema
-  │   └── external/           \# 外部API連携
-  └── shared/                 \# フロント/バックエンド共通コンポーネント
-      ├── types/              \# フロントエンド共有用モジュール
-      └── errors/             \# カスタムエラー型 (Result用)
+  └── infrastructure/         \# 技術的詳細の実装
+  　   ├── db/
+   　  │   ├── drizzle-repo.ts \# Concrete Repository Implementation
+       │   └── schema.ts       \# Drizzle Schema
+       └── external/           \# 外部API連携
+shared/                 \# フロント/バックエンド共通コンポーネント
+    ├── types/              \# フロントエンド共有用モジュール
+    └── errors/             \# カスタムエラー型 (Result用)
 ```
