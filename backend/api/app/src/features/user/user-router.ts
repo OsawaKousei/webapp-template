@@ -1,12 +1,8 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { match } from 'ts-pattern';
 import type { UserRepository } from './user-repo';
-import { getUserById } from './user-service';
-import {
-  ErrorResponseSchema,
-  GetUserParamSchema,
-  UserSchema,
-} from './user-schema';
+import { getCurrentUser } from './user-service';
+import { ErrorResponseSchema, UserSchema } from './user-schema';
 
 type CreateUserRouterInput = {
   readonly userRepository: UserRepository;
@@ -14,10 +10,7 @@ type CreateUserRouterInput = {
 
 const getUserRoute = createRoute({
   method: 'get',
-  path: '/users/{userId}',
-  request: {
-    params: GetUserParamSchema,
-  },
+  path: '/user',
   responses: {
     200: {
       description: 'User',
@@ -52,8 +45,7 @@ export const createUserRouter = ({
   const userRouter = new OpenAPIHono();
 
   userRouter.openapi(getUserRoute, async (context) => {
-    const { userId } = context.req.valid('param');
-    const userResult = await getUserById({ userId, userRepository });
+    const userResult = await getCurrentUser({ userRepository });
 
     return match(userResult)
       .when(

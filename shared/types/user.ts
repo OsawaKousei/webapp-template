@@ -9,14 +9,9 @@ export const UserSchema = z.object({
   status: UserStatusSchema,
 });
 
-export const GetUserParamSchema = z.object({
-  userId: z.string().min(1),
-});
-
 export const ErrorResponseSchema = z.object({
   error: z.string().min(1),
 });
 
 export type User = z.infer<typeof UserSchema>;
-export type GetUserParam = z.infer<typeof GetUserParamSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
