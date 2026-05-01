@@ -10,7 +10,7 @@ services:
     user: "node"
     volumes:
       - ./frontend/app:/home/node/app
-      - ./packages/types:/home/node/app/types
+      - ./shared/types:/home/node/app/types
       - frontend-node-modules:/home/node/app/node_modules
     ports:
       - "5173:5173"
@@ -22,7 +22,7 @@ services:
     user: "node"
     volumes:
       - ./backend/api/app:/home/node/app
-      - ./packages/types:/home/node/app/types
+      - ./shared/types:/home/node/app/types
       - api-node-modules:/home/node/app/node_modules
     ports:
       - "3000:3000"
