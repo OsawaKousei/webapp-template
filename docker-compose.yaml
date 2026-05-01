@@ -1,0 +1,32 @@
+volumes:
+  frontend-node-modules:
+  api-node-modules:
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    user: "node"
+    volumes:
+      - ./frontend/app:/app
+      - ./packages/types:/app/types
+      - frontend-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+
+  api:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile.dev
+    user: "node"
+    volumes:
+      - ./backend/api/app:/app
+      - ./packages/types:/app/types
+      - api-node-modules:/app/node_modules
+    ports:
+      - "3000:3000"
+
+networks:
+  default:
+    name: myapp-network
