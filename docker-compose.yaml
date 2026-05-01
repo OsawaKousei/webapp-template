@@ -9,9 +9,9 @@ services:
       dockerfile: Dockerfile.dev
     user: "node"
     volumes:
-      - ./frontend/app:/app
-      - ./packages/types:/app/types
-      - frontend-node-modules:/app/node_modules
+      - ./frontend/app:/home/node/app
+      - ./packages/types:/home/node/app/types
+      - frontend-node-modules:/home/node/app/node_modules
     ports:
       - "5173:5173"
 
@@ -21,9 +21,9 @@ services:
       dockerfile: Dockerfile.dev
     user: "node"
     volumes:
-      - ./backend/api/app:/app
-      - ./packages/types:/app/types
-      - api-node-modules:/app/node_modules
+      - ./backend/api/app:/home/node/app
+      - ./packages/types:/home/node/app/types
+      - api-node-modules:/home/node/app/node_modules
     ports:
       - "3000:3000"
     environment:
