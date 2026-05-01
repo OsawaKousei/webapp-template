@@ -29,6 +29,7 @@
     "@my-app/types": "file:./shared/types",
     "hono": "^4.12.16",
     "neverthrow": "^8.2.0",
+    "pino": "^10.3.1",
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.1"
   }

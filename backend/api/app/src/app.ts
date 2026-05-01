@@ -1,14 +1,38 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
+import type { Logger } from 'pino';
 import type { UserRepository } from './features/user/user-repo';
 import { createUserRouter } from './features/user/user-router';
 
 type CreateAppInput = {
+  readonly logger: Logger;
   readonly userRepository: UserRepository;
 };
 
-export const createApp = ({ userRepository }: CreateAppInput): OpenAPIHono => {
+export const createApp = ({ logger, userRepository }: CreateAppInput): OpenAPIHono => {
   const app = new OpenAPIHono();
+
+  app.use('*', async (context, next) => {
+    const requestId = crypto.randomUUID();
+    const startedAt = Date.now();
+
+    await next();
+
+    const durationMs = Date.now() - startedAt;
+
+    context.header('x-request-id', requestId);
+
+    logger.info(
+      {
+        requestId,
+        method: context.req.method,
+        path: context.req.path,
+        status: context.res.status,
+        durationMs,
+      },
+      'request completed',
+    );
+  });
 
   app.use(
     '/api/*',
