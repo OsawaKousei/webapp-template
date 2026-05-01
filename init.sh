@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # 所有権を固定 (nodeユーザー)
 UID_GID="1000:1000"
 PROJECT_NAME="webapp-template" # docker-composeのプロジェクト名に合わせて調整
@@ -16,9 +18,9 @@ docker run --rm -v "$(pwd):/mnt" alpine chown -R $UID_GID /mnt
 echo "Backend (API) の依存関係をインストール中..."
 docker run --rm \
   -u $UID_GID \
-  -v "${PROJECT_NAME}_api-node-modules:/home/node/app/node_modules" \
   -v "$(pwd)/backend/api/app:/home/node/app" \
   -v "$(pwd)/shared/types:/home/node/app/shared/types" \
+  -v "${PROJECT_NAME}_api-node-modules:/home/node/app/node_modules" \
   -w /home/node/app \
   node:22-slim \
   npm install
@@ -26,9 +28,9 @@ docker run --rm \
 echo "Frontend の依存関係をインストール中..."
 docker run --rm \
   -u $UID_GID \
-  -v "${PROJECT_NAME}_frontend-node-modules:/home/node/app/node_modules" \
   -v "$(pwd)/frontend/app:/home/node/app" \
   -v "$(pwd)/shared/types:/home/node/app/shared/types" \
+  -v "${PROJECT_NAME}_frontend-node-modules:/home/node/app/node_modules" \
   -w /home/node/app \
   node:22-slim \
   npm install
