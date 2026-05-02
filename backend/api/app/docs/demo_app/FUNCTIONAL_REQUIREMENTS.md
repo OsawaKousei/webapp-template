@@ -1,19 +1,23 @@
 # 機能要件定義書（現行実装準拠）
 
 ## 1. 文書情報
+
 - 文書名: AI Report App 機能要件定義書
 - 基準実装: 現行コードベース（2026-05-02 時点）
 - 対象: フロントエンド（Next.js App Router）/ バックエンド（FastAPI）
 - 方針: 本書は「あるべき姿」ではなく、現行実装の挙動を仕様化する
 
 ## 2. システム概要
+
 本システムは、Cognito 認証済みユーザー向けに、以下を提供する。
+
 - レポートの新規作成・編集・削除
 - AI による目次生成、本文生成、チャット支援、文章編集支援
 - 参考文献アップロードと管理、引用管理
 - レポートのエクスポート（実装上は txt/html を主に利用可能）
 
 ## 3. 役割定義
+
 - 一般ユーザー
   - Cognito でログインし、自身のレポートのみ参照・編集・削除できる
 - システム
@@ -23,6 +27,7 @@
 ## 4. 画面要件（UI要件）
 
 ### UI-001 ランディングページ（/）
+
 - 目的: サービス訴求とログイン導線提供
 - 表示要素:
   - ヘッダー（ロゴ、ログイン、無料で始める）
@@ -33,6 +38,7 @@
   - ログイン/無料で始める押下で /login へ遷移
 
 ### UI-002 ログインページ（/login）
+
 - 目的: 認証開始とセッション整合性確認
 - 表示要素:
   - ローディング状態（セッション確認中）
@@ -46,6 +52,7 @@
   - ログインボタン押下で next-auth の cognito サインインを開始
 
 ### UI-003 ホームページ（/home）
+
 - 目的: ユーザーダッシュボード
 - 表示要素:
   - サイドバー: ユーザー名、メール、プラン、クレジット、ログアウト、規約リンク、外部フィードバックリンク
@@ -59,6 +66,7 @@
   - 削除操作時は確認モーダルを表示し、確定で削除API呼び出し
 
 ### UI-004 新規レポート作成（/new-report/{id}）
+
 - 目的: ウィザード形式で本文生成前の条件入力
 - 共通要件:
   - フェーズ表示（概要、参考資料、口調、目次、任意で人間らしさチェック）
@@ -90,6 +98,7 @@
   - humanize 無効なら直ちに /report/{id} へ遷移
 
 ### UI-005 レポート編集ページ（/report/{id}）
+
 - 目的: レポートの閲覧・編集・保存・AI支援
 - レイアウト:
   - ヘッダー
@@ -125,6 +134,7 @@
   - 画面ロード時に /api/user/home と /api/report?reportId=... を並列取得
 
 ### UI-006 エクスポートモーダル
+
 - 目的: 出力形式とオプション選択
 - 表示要素:
   - 形式選択: pdf/docx/txt/html
@@ -134,57 +144,68 @@
   - txt/html は選択可能
 
 ### UI-007 規約・プライバシーポリシー
+
 - /terms-of-service、/privacy-policy は静的長文ページとして表示
 - いずれも /home へ戻るリンクを表示
 
 ### UI-008 エディタテストページ（/editor-test）
+
 - テスト用途ページ
 - 初期JSONコンテンツを与えてエディタ動作を確認可能
 
 ## 5. 機能要件（業務機能/API）
 
 ### FR-001 認証・セッション
+
 - next-auth は Cognito Provider を使用
 - JWTセッション方式、maxAge=24時間
 - セッションに accessToken を保持
 - API Route は getServerSession による認証を前提とし、未認証時401を返却
 
 ### FR-002 ユーザープロファイル取得
+
 - フロント API: GET /api/user/home
 - BFF は BACKEND_URL/user/profile へ Bearer 中継
 - バックエンドは認証済みユーザー情報（表示名、メール、サブスク情報、クレジット）を返却
 
 ### FR-003 ユーザーレポート一覧取得
+
 - フロント API: GET /api/user/user-reports
 - BFF は BACKEND_URL/user/reports へ中継
 - バックエンドはユーザー所有レポートのみ返却
 
 ### FR-004 レポート新規作成
+
 - フロント API: POST /api/report/new（bodyは空）
 - BFF は BACKEND_URL/report/new に中継
 - 成功時 reportId を返却
 
 ### FR-005 レポート取得
+
 - フロント API: GET /api/report?reportId={id}
 - BFF は BACKEND_URL/report?reportId={id} に中継
 - content は文字列JSONを復元し、失敗時は代替メッセージ文書を返す
 
 ### FR-006 レポート保存
+
 - フロント API: POST /api/report
 - 入力: ReportData（title/content/wordCount/characterCount/references/quotes）
 - BFF は共通 saveReport 処理で BACKEND_URL/report へ保存
 
 ### FR-007 レポート削除
+
 - フロント API: DELETE /api/report?reportId={id}
 - BFF は BACKEND_URL/report?reportId={id} に中継
 
 ### FR-008 目次生成
+
 - フロント API: POST /api/ai/outline
 - 必須: overview、aiMode、wordCount
 - BFF は BACKEND_URL/ai/outline へ中継
 - バックエンドは必要に応じ overviewReferenceId から参考文献本文を読み替えて生成
 
 ### FR-009 本文生成
+
 - フロント API: POST /api/ai/report
 - 必須: reportId、tone（加えてバックエンド側では overview、outline、wordCount も必須）
 - BFF は BACKEND_URL/ai/report に中継
@@ -192,22 +213,26 @@
 - 返却は生成結果（title/content/reference/quote）
 
 ### FR-010 チャット支援
+
 - フロント API: POST /api/ai/chat
 - 必須: message、aiMode、chatMode
 - BFF は BACKEND_URL/ai/chat に中継
 - 応答 result をチャット履歴に追加
 
 ### FR-011 エディタAI支援
+
 - フロント API: POST /api/ai/editor
 - 必須: content、aiAction、aiMode
 - BFF は BACKEND_URL/ai/editor に中継
 
 ### FR-012 参考文献検索
+
 - フロント API: POST /api/ai/reference_search
 - 必須: query、aiMode
 - BFF は BACKEND_URL/ai/reference-search に中継
 
 ### FR-013 参考文献アップロード
+
 - フロント API: POST /api/report/upload-file（FormData: file, report_id）
 - BFF は BACKEND_URL/file/upload-file に中継
 - バックエンドは
@@ -215,23 +240,27 @@
   - ファイルテキスト抽出
   - 引用情報生成
   - 参考文献保存
-  を行い、reference を返却
+    を行い、reference を返却
 
 ### FR-014 参考文献削除
+
 - フロント API: DELETE /api/report/reference?referenceId={id}
 - BFF は BACKEND_URL/reference/?referenceId={id} に中継
 
 ### FR-015 引用保存
+
 - フロント API: POST /api/report/quote が存在
 - 現行実装では BFF が BACKEND_URL/quote/save-quote を呼び出す
 - バックエンド側には quote ルーター未実装のため、実効性はバックエンド構成に依存
 
 ### FR-016 Humanize処理
+
 - フロント API: POST /api/report/humanize
 - 入力: reportId、humanizeChecker
 - 現行実装はモック（1〜2秒遅延後 success を返却）
 
 ### FR-017 エクスポート
+
 - フロント API: POST /api/export
 - 入力: format, reportTitle, content(JSONContent), options
 - format=pdf は /api/export/pdf を内部呼び出し
@@ -239,6 +268,7 @@
 - /api/export/pdf は Puppeteer で PDF 生成を実装
 
 ## 6. バックエンド認可要件
+
 - 全主要APIは get_current_user 依存で認証必須
 - JWT検証要件:
   - Authorization: Bearer トークン形式
@@ -249,6 +279,7 @@
   - report/reference は user_id 所有者検証を実施
 
 ## 7. バリデーション・エラーハンドリング要件
+
 - BFF/APIともに必須項目未指定時 400 を返す
 - 未認証時 401
 - 権限不一致時 403（バックエンド）
@@ -257,6 +288,7 @@
 - 画面側はエラー文言表示または /home・/login へフォールバック遷移を行う
 
 ## 8. 永続化・状態管理要件
+
 - DB保存対象:
   - ユーザー、レポート、参考文献、引用関連
 - クライアント一時状態:
@@ -264,6 +296,7 @@
   - キャンセル/完了時に関連キーをクリア
 
 ## 9. 非機能的な実装制約（現行仕様として扱う）
+
 - BACKEND_URL 未設定時、BFF 経由機能は利用不可
 - Humanize は現状モック処理
 - エクスポートUI上は pdf/docx が disabled
@@ -273,6 +306,7 @@
 ## 10. 主要ルート一覧
 
 ### フロント画面ルート
+
 - /
 - /login
 - /home
@@ -283,6 +317,7 @@
 - /editor-test
 
 ### フロント API ルート（BFF）
+
 - /api/auth/[...nextauth]
 - /api/user/home
 - /api/user/user-reports
@@ -301,6 +336,7 @@
 - /api/export/pdf
 
 ### バックエンド API ルート（FastAPI）
+
 - /user/cognito-signup
 - /user/profile
 - /user/reports
@@ -315,19 +351,22 @@
 - /reference/ (DELETE)
 
 ## 11. トレーサビリティ（根拠実装）
+
 本書は主に以下実装を根拠に作成。
+
 - frontend/src/app 配下ページ
 - frontend/src/app/api 配下 API Routes
-- frontend/src/app/*/_components 配下UIコンポーネント
-- frontend/src/types/*.ts
+- frontend/src/app/\*/\_components 配下UIコンポーネント
+- frontend/src/types/\*.ts
 - backend/app/src/main.py
-- backend/app/src/api/routers/*.py
+- backend/app/src/api/routers/\*.py
 - backend/app/src/auth/cognito_auth.py
-- backend/app/src/schemas/*.py
+- backend/app/src/schemas/\*.py
 
 ## 12. 0ベース新アーキテクチャ実装計画
 
 ### 12.1 新アーキテクチャ方針（全フェーズ共通）
+
 - フロントエンド: vite+react / cloudfront + S3
 - ドメインAPI: hono
 - 非同期処理: ワーカー（aws lambda, typescript）+ ジョブキュー（Redis/SQS）
@@ -338,6 +377,7 @@
 - インフラ: terraform
 
 ### 12.2 フェーズ実装順序
+
 1. 外部API呼び出しをモックしたモックアップ
 2. 最低限の機能を実装したMVP
 3. 認証・認可、決済を実装したアルファ版
@@ -347,12 +387,13 @@
 ### 12.3 フェーズ別計画
 
 #### Phase 1: モックアップ（外部APIモック）
+
 - 目的:
   - 画面遷移、操作導線、主要UIの体験を先行確定
   - 外部依存（LLM、認証、決済、ファイル解析）なしで検証可能にする
 - 実装スコープ:
   - ページ: /, /login, /home, /new-report/{id}, /report/{id}
-  - API: /api/mock/*（固定JSON、遅延、疑似エラー）
+  - API: /api/mock/\*（固定JSON、遅延、疑似エラー）
   - エディタ、チャット、参考文献、引用、エクスポートUIの操作感再現
   - ローカル状態のみ（DB未接続）
 - 除外:
@@ -367,6 +408,7 @@
   - デモシナリオを非開発者が再現可能
 
 #### Phase 2: MVP（最低限機能）
+
 - 目的:
   - 1ユーザー前提で「作って保存して再編集」が成立する最小価値を提供
 - 実装スコープ:
@@ -390,6 +432,7 @@
   - 主要APIの異常系（400/500）ハンドリングが実装済み
 
 #### Phase 3: アルファ版（認証・認可・決済）
+
 - 目的:
   - 複数ユーザー利用を安全に成立させる
   - 事業化に必要な認証・課金基盤を導入
@@ -412,6 +455,7 @@
   - テスト決済が成功し、課金状態がDBに整合反映される
 
 #### Phase 4: ベータ版（主要機能拡充）
+
 - 目的:
   - 実利用可能な機能網羅と品質向上
   - 限定ユーザーに開放して運用データを収集
@@ -433,6 +477,7 @@
   - ベータ運用中の重大障害に対して復旧手順が機能
 
 #### Phase 5: リリース版（本番完全版）
+
 - 目的:
   - 一般公開可能な運用品質・セキュリティ・サポート体制を完成
 - 実装スコープ:
@@ -450,6 +495,7 @@
   - 監視・障害対応・サポートが当番運用可能
 
 ### 12.4 横断バックログ（全フェーズで継続）
+
 - 設計:
   - API契約のバージョニング規約
   - ドメインモデルの境界定義（Report/Reference/Billing/Auth）
@@ -461,6 +507,7 @@
   - 変更管理（ADR、リリースノート）
 
 ### 12.5 推奨マイルストーン（目安）
+
 - M1: モックアップ完了（2〜3週間）
 - M2: MVP完了（4〜6週間）
 - M3: アルファ完了（4〜6週間）

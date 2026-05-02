@@ -1,6 +1,9 @@
 import { err, ok, type Result } from 'neverthrow';
 import type { UserRepository } from '../../features/user/user-repo';
-import type { ReportSummary, UserProfile } from '../../features/user/user-schema';
+import type {
+  ReportSummary,
+  UserProfile,
+} from '../../features/user/user-schema';
 import {
   createInternalServerError,
   createNotFoundError,
@@ -17,15 +20,16 @@ const userRecordById: Readonly<Record<string, UserProfile>> = {
   },
 };
 
-const reportRecordByUserId: Readonly<Record<string, readonly ReportSummary[]>> = {
-  u123: [
-    {
-      reportId: 'r-001',
-      title: 'AI Report Draft',
-      lastModifiedAt: '2026-05-01T10:00:00.000Z',
-    },
-  ],
-};
+const reportRecordByUserId: Readonly<Record<string, readonly ReportSummary[]>> =
+  {
+    u123: [
+      {
+        reportId: 'r-001',
+        title: 'AI Report Draft',
+        lastModifiedAt: '2026-05-01T10:00:00.000Z',
+      },
+    ],
+  };
 
 const findUserFromRecord = (userId: string): Result<UserProfile, AppError> => {
   const user = userRecordById[userId];

@@ -2,18 +2,30 @@ import { ok, type Result } from 'neverthrow';
 import type { AppError } from '../../../shared/errors/app-error';
 import type {
   DeleteOutlineByUserIdInput,
+  FindReportByIdInput,
   FindOutlineByUserIdInput,
   ReportRepository,
+  SaveReportByIdInput,
   SaveOutlineByUserIdInput,
 } from '../../features/report/report-repo';
-import type { Outline } from '../../features/report/report-schema';
+import type {
+  Outline,
+  ReportDetail,
+} from '../../features/report/report-schema';
 
 const outlineStore = new Map<string, Outline>();
+const reportStore = new Map<string, ReportDetail>();
 
 const cloneOutline = (outline: Outline): Outline => {
   return {
     ...outline,
     items: [...outline.items],
+  };
+};
+
+const cloneReport = (report: ReportDetail): ReportDetail => {
+  return {
+    ...report,
   };
 };
 
@@ -47,9 +59,37 @@ export const createInMemoryReportRepository = (): ReportRepository => {
     return ok(true);
   };
 
+  const findReportById = async ({
+    userId,
+    reportId,
+  }: FindReportByIdInput): Promise<Result<ReportDetail | null, AppError>> => {
+    const report = reportStore.get(reportId);
+
+    if (report === undefined) {
+      return ok(null);
+    }
+
+    if (report.userId !== userId) {
+      return ok(null);
+    }
+
+    return ok(cloneReport(report));
+  };
+
+  const saveReportById = async ({
+    report,
+  }: SaveReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+    const nextReport = cloneReport(report);
+    reportStore.set(nextReport.reportId, nextReport);
+
+    return ok(cloneReport(nextReport));
+  };
+
   return {
     findOutlineByUserId,
     saveOutlineByUserId,
     deleteOutlineByUserId,
+    findReportById,
+    saveReportById,
   };
 };

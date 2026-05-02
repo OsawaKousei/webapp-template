@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 const EnvSchema = z.object({
   NODE_ENV: z
-    .union([z.literal('development'), z.literal('test'), z.literal('production')])
+    .union([
+      z.literal('development'),
+      z.literal('test'),
+      z.literal('production'),
+    ])
     .default('development'),
   LOG_LEVEL: z
     .union([

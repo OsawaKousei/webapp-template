@@ -25,16 +25,15 @@ export const OutlineSchema = z.object({
 
 export const AiModeSchema = z.union([z.literal('speed'), z.literal('turbo')]);
 
-export const WordCountRangeSchema = z.object({
-  minWordCount: z.number().int().min(0),
-  maxWordCount: z.number().int().min(0),
-}).refine(
-  (value) => value.maxWordCount >= value.minWordCount,
-  {
+export const WordCountRangeSchema = z
+  .object({
+    minWordCount: z.number().int().min(0),
+    maxWordCount: z.number().int().min(0),
+  })
+  .refine((value) => value.maxWordCount >= value.minWordCount, {
     message: 'maxWordCount must be greater than or equal to minWordCount',
     path: ['maxWordCount'],
-  },
-);
+  });
 
 export const GenerateOutlineRequestSchema = z.object({
   overview: z.string().trim().min(1),
@@ -52,6 +51,36 @@ export const GenerateOutlineResponseSchema = z.object({
   outline: GeneratedOutlineSchema,
 });
 
+export const GenerateReportToneSchema = z.union([
+  z.literal('formal'),
+  z.literal('balanced'),
+  z.literal('casual'),
+]);
+
+export const GenerateReportRequestSchema = z.object({
+  tone: GenerateReportToneSchema,
+});
+
+export const GenerateReportResponseSchema = z.object({
+  reportId: z.string().min(1),
+  title: z.string().trim().min(1),
+  content: z.string().trim().min(1),
+});
+
+export const ReportDetailSchema = z.object({
+  reportId: z.string().min(1),
+  userId: z.string().min(1),
+  title: z.string().trim().min(1),
+  content: z.string().trim().min(1),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+});
+
+export const SaveReportRequestSchema = z.object({
+  title: z.string().trim().min(1),
+  content: z.string().trim().min(1),
+});
+
 export const DeleteOutlineResponseSchema = z.object({
   success: z.literal(true),
 });
@@ -61,5 +90,16 @@ export type OutlineItem = z.infer<typeof OutlineItemSchema>;
 export type Outline = z.infer<typeof OutlineSchema>;
 export type AiMode = z.infer<typeof AiModeSchema>;
 export type WordCountRange = z.infer<typeof WordCountRangeSchema>;
-export type GenerateOutlineRequest = z.infer<typeof GenerateOutlineRequestSchema>;
-export type GenerateOutlineResponse = z.infer<typeof GenerateOutlineResponseSchema>;
+export type GenerateOutlineRequest = z.infer<
+  typeof GenerateOutlineRequestSchema
+>;
+export type GenerateOutlineResponse = z.infer<
+  typeof GenerateOutlineResponseSchema
+>;
+export type GenerateReportTone = z.infer<typeof GenerateReportToneSchema>;
+export type GenerateReportRequest = z.infer<typeof GenerateReportRequestSchema>;
+export type GenerateReportResponse = z.infer<
+  typeof GenerateReportResponseSchema
+>;
+export type ReportDetail = z.infer<typeof ReportDetailSchema>;
+export type SaveReportRequest = z.infer<typeof SaveReportRequestSchema>;

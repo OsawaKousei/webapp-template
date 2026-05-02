@@ -1,8 +1,11 @@
-import { ok, type Result } from 'neverthrow';
-import type { AppError } from '../../../shared/errors/app-error';
+import { err, ok, type Result } from 'neverthrow';
+import {
+  createNotFoundError,
+  type AppError,
+} from '../../../shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from './report-repo';
-import type { Outline } from './report-schema';
+import type { Outline, ReportDetail, SaveReportRequest } from './report-schema';
 
 type GetMyOutlineInput = {
   readonly reportRepository: ReportRepository;
@@ -15,6 +18,21 @@ type DeleteMyOutlineInput = {
 type SaveMyOutlineInput = {
   readonly reportRepository: ReportRepository;
   readonly outline: Outline;
+};
+
+type GetMyReportByIdInput = {
+  readonly reportRepository: ReportRepository;
+  readonly reportId: string;
+};
+
+type SaveMyReportByIdInput = {
+  readonly reportRepository: ReportRepository;
+  readonly reportId: string;
+  readonly request: SaveReportRequest;
+};
+
+const nowIso = (): string => {
+  return new Date().toISOString();
 };
 
 export const getMyOutline = async ({
@@ -41,4 +59,55 @@ export const saveMyOutline = async ({
 
 export const createDeleteOutlineResult = (): Result<true, AppError> => {
   return ok(true);
+};
+
+export const getMyReportById = async ({
+  reportRepository,
+  reportId,
+}: GetMyReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+  const findResult = await reportRepository.findReportById({
+    userId: CURRENT_USER_ID,
+    reportId,
+  });
+
+  if (findResult.isErr()) {
+    return err(findResult.error);
+  }
+
+  const report = findResult.value;
+
+  if (report === null) {
+    return err(createNotFoundError('Report not found'));
+  }
+
+  return ok(report);
+};
+
+export const saveMyReportById = async ({
+  reportRepository,
+  reportId,
+  request,
+}: SaveMyReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+  const existingResult = await reportRepository.findReportById({
+    userId: CURRENT_USER_ID,
+    reportId,
+  });
+
+  if (existingResult.isErr()) {
+    return err(existingResult.error);
+  }
+
+  const now = nowIso();
+  const existing = existingResult.value;
+
+  const nextReport: ReportDetail = {
+    reportId,
+    userId: CURRENT_USER_ID,
+    title: request.title,
+    content: request.content,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
+
+  return reportRepository.saveReportById({ report: nextReport });
 };

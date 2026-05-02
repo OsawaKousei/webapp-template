@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { createApp } from '../../../../src/app';
-import { GenerateOutlineResponseSchema } from '../../../../src/features/ai/ai-schema';
+import {
+  GenerateOutlineResponseSchema,
+  GenerateReportResponseSchema,
+} from '../../../../src/features/ai/ai-schema';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
@@ -164,5 +167,72 @@ describe('POST /api/ai/generate-outline', () => {
     });
 
     expect(response.status).toBe(400);
+  });
+});
+
+describe('POST /api/ai/generate-report', () => {
+  test('200: outline から本文を生成できる', async () => {
+    const reportRepository = createFakeReportRepository({
+      initialOutlineByUserId: {
+        u123: {
+          userId: 'u123',
+          overview: '概要',
+          title: 'タイトル',
+          items: [
+            {
+              title: '導入',
+              summary: '要点',
+              order: 1,
+            },
+          ],
+          createdAt: '2026-05-01T10:00:00.000Z',
+          updatedAt: '2026-05-01T10:00:00.000Z',
+        },
+      },
+    });
+    const app = createApp({
+      logger,
+      reportRepository,
+      userRepository,
+    });
+
+    const response = await app.request('/api/ai/generate-report', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        tone: 'balanced',
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const json = await response.json();
+    const parsed = GenerateReportResponseSchema.safeParse(json);
+
+    expect(parsed.success).toBe(true);
+  });
+
+  test('404: outline がない場合は not found', async () => {
+    const reportRepository = createFakeReportRepository();
+    const app = createApp({
+      logger,
+      reportRepository,
+      userRepository,
+    });
+
+    const response = await app.request('/api/ai/generate-report', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        tone: 'formal',
+      }),
+    });
+
+    expect(response.status).toBe(404);
+    const json = await response.json();
+    expect(json).toEqual({ error: 'Outline not found' });
   });
 });

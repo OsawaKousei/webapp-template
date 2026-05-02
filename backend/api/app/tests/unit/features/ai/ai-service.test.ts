@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { generateOutline } from '../../../../src/features/ai/ai-service';
+import {
+  generateOutline,
+  generateReport,
+} from '../../../../src/features/ai/ai-service';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 
 describe('ai-service', () => {
@@ -64,5 +67,59 @@ describe('ai-service', () => {
     }
 
     expect(result.error.type).toBe('CONFLICT');
+  });
+
+  test('generateReport: outline から本文を生成して保存できる', async () => {
+    const reportRepository = createFakeReportRepository({
+      initialOutlineByUserId: {
+        u123: {
+          userId: 'u123',
+          overview: '概要',
+          title: 'タイトル',
+          items: [
+            {
+              title: '導入',
+              summary: '要点',
+              order: 1,
+            },
+          ],
+          createdAt: '2026-05-01T10:00:00.000Z',
+          updatedAt: '2026-05-01T10:00:00.000Z',
+        },
+      },
+    });
+
+    const result = await generateReport({
+      reportRepository,
+      request: {
+        tone: 'balanced',
+      },
+    });
+
+    expect(result.isOk()).toBe(true);
+    if (result.isErr()) {
+      return;
+    }
+
+    expect(result.value.reportId.length).toBeGreaterThan(0);
+    expect(result.value.content.length).toBeGreaterThan(0);
+  });
+
+  test('generateReport: outline がない場合は NOT_FOUND', async () => {
+    const reportRepository = createFakeReportRepository();
+
+    const result = await generateReport({
+      reportRepository,
+      request: {
+        tone: 'formal',
+      },
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      return;
+    }
+
+    expect(result.error.type).toBe('NOT_FOUND');
   });
 });

@@ -9,7 +9,10 @@ import type {
   FindUserByIdInput,
   UserRepository,
 } from '../../src/features/user/user-repo';
-import type { ReportSummary, UserProfile } from '../../src/features/user/user-schema';
+import type {
+  ReportSummary,
+  UserProfile,
+} from '../../src/features/user/user-schema';
 
 type FakeUserRepoConfig = {
   readonly users?: readonly UserProfile[];
@@ -17,7 +20,9 @@ type FakeUserRepoConfig = {
   readonly forceInternalError?: boolean;
 };
 
-const toUserMap = (users: readonly UserProfile[]): ReadonlyMap<string, UserProfile> => {
+const toUserMap = (
+  users: readonly UserProfile[],
+): ReadonlyMap<string, UserProfile> => {
   return users.reduce<Map<string, UserProfile>>((accumulator, user) => {
     accumulator.set(user.id, user);
     return accumulator;
