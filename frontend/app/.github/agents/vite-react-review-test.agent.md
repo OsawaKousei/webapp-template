@@ -49,6 +49,7 @@ Deliver quality gates with minimal noise:
 - Avoid brittle DOM-structure assertions; test user behavior and state transitions.
 - Use data-testid for stable selectors when needed.
 - Use MSW for network-level API mocking in widget tests.
+- When running e2e tests, if errors indicate missing Playwright/browser runtime, first suspect the execution environment is incorrect (e.g., not in the Playwright-preinstalled container) before changing test code.
 - Select test execution command by requested scope:
   - all scope: npm run test
   - unit scope: npm run test:unit

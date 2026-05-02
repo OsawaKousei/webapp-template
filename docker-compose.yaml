@@ -15,6 +15,19 @@ services:
     ports:
       - "5173:5173"
 
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    working_dir: /app
+    command: ["sh", "-c", "sleep infinity"]
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./frontend/app:/app
+      - ./shared/types:/app/shared/types
+      - /app/node_modules
+    depends_on:
+      - frontend
+
   api:
     build:
       context: ./backend/api
