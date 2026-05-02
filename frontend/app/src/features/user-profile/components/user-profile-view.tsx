@@ -1,6 +1,12 @@
 import { match } from 'ts-pattern';
-import type { User } from '@my-app/types';
 import { Button } from '../../../components/ui/button';
+
+type User = {
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly status: string;
+};
 
 type UserProfileViewState =
   | { readonly status: 'loading' }

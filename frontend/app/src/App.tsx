@@ -1,7 +1,7 @@
-import { DashboardLayout } from './layouts/dashboard-layout';
+import { AppRoutes } from './app/routes/app-routes';
 
 const App = () => {
-  return <DashboardLayout />;
+  return <AppRoutes />;
 };
 
 export default App;

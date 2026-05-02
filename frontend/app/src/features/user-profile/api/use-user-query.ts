@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import type { User } from '@my-app/types';
 import { fetchUserAsync } from './fetch-user-async';
+
+type User = Awaited<ReturnType<typeof fetchUserAsync>>;
 
 export const userQueryKey = ['user-profile'] as const;
 
