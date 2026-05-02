@@ -25,12 +25,12 @@ type HomeUser = z.infer<typeof homeUserSchema>;
 type HomeReport = z.infer<typeof reportSchema>;
 
 export const fetchHomeUserAsync = async (): Promise<HomeUser> => {
-  return requestJsonAsync({ path: '/api/user/home' }, homeUserSchema);
+  return requestJsonAsync({ path: '/api/users/me' }, homeUserSchema);
 };
 
 export const fetchHomeReportsAsync = async (): Promise<readonly HomeReport[]> => {
   return requestJsonAsync(
-    { path: '/api/user/user-reports' },
+    { path: '/api/users/me/reports' },
     reportListSchema,
   );
 };
