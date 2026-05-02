@@ -152,7 +152,7 @@ export const NewReportWidget = () => {
     setIsBusy(true);
 
     try {
-      await generateReportAsync({
+      const generatedReport = await generateReportAsync({
         reportId,
         overview,
         title,
@@ -168,7 +168,7 @@ export const NewReportWidget = () => {
 
       if (!enableHumanize) {
         actions.clear();
-        navigate(`/report/${reportId}`);
+        navigate(`/report/${generatedReport.reportId}`);
         return;
       }
 
@@ -178,7 +178,7 @@ export const NewReportWidget = () => {
 
       setTimeout(() => {
         actions.clear();
-        navigate(`/report/${reportId}`);
+        navigate(`/report/${generatedReport.reportId}`);
       }, 2000);
     } catch {
       actions.clear();

@@ -17,10 +17,6 @@ const reportSchema = z.object({
 
 const reportListSchema = z.array(reportSchema);
 
-const createdReportSchema = z.object({
-  reportId: z.string().min(1),
-});
-
 type HomeUser = z.infer<typeof homeUserSchema>;
 type HomeReport = z.infer<typeof reportSchema>;
 
@@ -36,12 +32,7 @@ export const fetchHomeReportsAsync = async (): Promise<readonly HomeReport[]> =>
 };
 
 export const createReportAsync = async (): Promise<string> => {
-  const response = await requestJsonAsync(
-    { path: '/api/report/new', method: 'POST' },
-    createdReportSchema,
-  );
-
-  return response.reportId;
+  return crypto.randomUUID();
 };
 
 export const deleteReportAsync = async (reportId: string): Promise<void> => {

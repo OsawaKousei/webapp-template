@@ -57,6 +57,18 @@ type GenerateReportArgs = {
   readonly humanize: boolean;
 };
 
+const toGenerateReportTone = (tone: string): 'formal' | 'balanced' | 'casual' => {
+  if (tone === 'dearu-da') {
+    return 'formal';
+  }
+
+  if (tone === 'desu-masu') {
+    return 'balanced';
+  }
+
+  return 'balanced';
+};
+
 export const uploadReferenceAsync = async (
   reportId: string,
   file: File,
@@ -92,7 +104,7 @@ export const deleteReferenceAsync = async (referenceId: string) => {
 export const generateOutlineAsync = async (args: GenerateOutlineArgs) => {
   const response = await requestJsonAsync(
     {
-      path: '/api/ai/outline',
+      path: '/api/ai/generate-outline',
       method: 'POST',
       body: {
         overview: args.overview,
@@ -114,9 +126,11 @@ export const generateOutlineAsync = async (args: GenerateOutlineArgs) => {
 export const generateReportAsync = async (args: GenerateReportArgs) => {
   const response = await requestJsonAsync(
     {
-      path: '/api/ai/report',
+      path: '/api/ai/generate-report',
       method: 'POST',
-      body: args,
+      body: {
+        tone: toGenerateReportTone(args.tone),
+      },
     },
     reportResponseSchema,
   );
