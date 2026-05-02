@@ -2,7 +2,7 @@ import { err, ok, type Result } from 'neverthrow';
 import { createNotFoundError, type AppError } from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from './report-repo';
-import type { Outline, ReportDetail, SaveReportRequest } from './report-schema';
+import type { Outline, Report, SaveReportCommand } from './report-domain';
 
 type GetMyOutlineInput = {
   readonly reportRepository: ReportRepository;
@@ -25,7 +25,7 @@ type GetMyReportByIdInput = {
 type SaveMyReportByIdInput = {
   readonly reportRepository: ReportRepository;
   readonly reportId: string;
-  readonly request: SaveReportRequest;
+  readonly request: SaveReportCommand;
 };
 
 const nowIso = (): string => {
@@ -61,7 +61,7 @@ export const createDeleteOutlineResult = (): Result<true, AppError> => {
 export const getMyReportById = async ({
   reportRepository,
   reportId,
-}: GetMyReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+}: GetMyReportByIdInput): Promise<Result<Report, AppError>> => {
   const findResult = await reportRepository.findReportById({
     userId: CURRENT_USER_ID,
     reportId,
@@ -84,7 +84,7 @@ export const saveMyReportById = async ({
   reportRepository,
   reportId,
   request,
-}: SaveMyReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+}: SaveMyReportByIdInput): Promise<Result<Report, AppError>> => {
   const existingResult = await reportRepository.findReportById({
     userId: CURRENT_USER_ID,
     reportId,
@@ -97,7 +97,7 @@ export const saveMyReportById = async ({
   const now = nowIso();
   const existing = existingResult.value;
 
-  const nextReport: ReportDetail = {
+  const nextReport: Report = {
     reportId,
     userId: CURRENT_USER_ID,
     title: request.title,

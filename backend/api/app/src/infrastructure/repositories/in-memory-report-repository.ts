@@ -10,11 +10,11 @@ import type {
 } from '../../features/report/report-repo';
 import type {
   Outline,
-  ReportDetail,
-} from '../../features/report/report-schema';
+  Report,
+} from '../../features/report/report-domain';
 
 const outlineStore = new Map<string, Outline>();
-const reportStore = new Map<string, ReportDetail>();
+const reportStore = new Map<string, Report>();
 
 const cloneOutline = (outline: Outline): Outline => {
   return {
@@ -23,7 +23,7 @@ const cloneOutline = (outline: Outline): Outline => {
   };
 };
 
-const cloneReport = (report: ReportDetail): ReportDetail => {
+const cloneReport = (report: Report): Report => {
   return {
     ...report,
     references: report.references.map((reference) => {
@@ -70,7 +70,7 @@ export const createInMemoryReportRepository = (): ReportRepository => {
   const findReportById = async ({
     userId,
     reportId,
-  }: FindReportByIdInput): Promise<Result<ReportDetail | null, AppError>> => {
+  }: FindReportByIdInput): Promise<Result<Report | null, AppError>> => {
     const report = reportStore.get(reportId);
 
     if (report === undefined) {
@@ -86,7 +86,7 @@ export const createInMemoryReportRepository = (): ReportRepository => {
 
   const saveReportById = async ({
     report,
-  }: SaveReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+  }: SaveReportByIdInput): Promise<Result<Report, AppError>> => {
     const nextReport = cloneReport(report);
     reportStore.set(nextReport.reportId, nextReport);
 

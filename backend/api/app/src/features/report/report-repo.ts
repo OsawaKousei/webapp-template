@@ -1,6 +1,6 @@
 import type { Result } from 'neverthrow';
 import type { AppError } from '@/shared/errors/app-error';
-import type { Outline, ReportDetail } from './report-schema';
+import type { Outline, Report } from './report-domain';
 
 export type FindOutlineByUserIdInput = {
   readonly userId: string;
@@ -21,7 +21,7 @@ export type FindReportByIdInput = {
 };
 
 export type SaveReportByIdInput = {
-  readonly report: ReportDetail;
+  readonly report: Report;
 };
 
 export type ReportRepository = {
@@ -36,8 +36,8 @@ export type ReportRepository = {
   ) => Promise<Result<true, AppError>>;
   readonly findReportById: (
     input: FindReportByIdInput,
-  ) => Promise<Result<ReportDetail | null, AppError>>;
+  ) => Promise<Result<Report | null, AppError>>;
   readonly saveReportById: (
     input: SaveReportByIdInput,
-  ) => Promise<Result<ReportDetail, AppError>>;
+  ) => Promise<Result<Report, AppError>>;
 };

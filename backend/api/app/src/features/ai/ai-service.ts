@@ -6,13 +6,12 @@ import {
 } from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from '../report/report-repo';
+import type { Outline, OutlineItem } from '../report/report-domain';
 import type {
   GenerateReportRequest,
   GenerateReportResponse,
   GenerateOutlineRequest,
   GenerateOutlineResponse,
-  Outline,
-  OutlineItem,
 } from './ai-schema';
 
 type GenerateOutlineInput = {

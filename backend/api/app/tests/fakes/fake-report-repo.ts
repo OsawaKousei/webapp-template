@@ -13,12 +13,12 @@ import type {
 } from '../../src/features/report/report-repo';
 import type {
   Outline,
-  ReportDetail,
-} from '../../src/features/report/report-schema';
+  Report,
+} from '../../src/features/report/report-domain';
 
 type FakeReportRepoConfig = {
   readonly initialOutlineByUserId?: Readonly<Record<string, Outline>>;
-  readonly initialReportByReportId?: Readonly<Record<string, ReportDetail>>;
+  readonly initialReportByReportId?: Readonly<Record<string, Report>>;
   readonly forceInternalError?: boolean;
 };
 
@@ -29,7 +29,7 @@ const cloneOutline = (outline: Outline): Outline => {
   };
 };
 
-const cloneReport = (report: ReportDetail): ReportDetail => {
+const cloneReport = (report: Report): Report => {
   return {
     ...report,
     references: report.references.map((reference) => {
@@ -55,12 +55,12 @@ export const createFakeReportRepository = (
     new Map<string, Outline>(),
   );
   const reportEntries = Object.entries(config.initialReportByReportId ?? {});
-  const reportStore = reportEntries.reduce<Map<string, ReportDetail>>(
+  const reportStore = reportEntries.reduce<Map<string, Report>>(
     (accumulator, [reportId, report]) => {
       accumulator.set(reportId, cloneReport(report));
       return accumulator;
     },
-    new Map<string, ReportDetail>(),
+    new Map<string, Report>(),
   );
 
   const findOutlineByUserId = async ({
@@ -107,7 +107,7 @@ export const createFakeReportRepository = (
   const findReportById = async ({
     userId,
     reportId,
-  }: FindReportByIdInput): Promise<Result<ReportDetail | null, AppError>> => {
+  }: FindReportByIdInput): Promise<Result<Report | null, AppError>> => {
     if (config.forceInternalError === true) {
       return err(createInternalServerError('forced internal error'));
     }
@@ -127,7 +127,7 @@ export const createFakeReportRepository = (
 
   const saveReportById = async ({
     report,
-  }: SaveReportByIdInput): Promise<Result<ReportDetail, AppError>> => {
+  }: SaveReportByIdInput): Promise<Result<Report, AppError>> => {
     if (config.forceInternalError === true) {
       return err(createInternalServerError('forced internal error'));
     }

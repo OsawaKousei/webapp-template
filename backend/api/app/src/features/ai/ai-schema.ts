@@ -12,6 +12,4 @@ export type {
   GenerateReportResponse,
   GenerateOutlineRequest,
   GenerateOutlineResponse,
-  Outline,
-  OutlineItem,
 } from '@/shared/types/report';
