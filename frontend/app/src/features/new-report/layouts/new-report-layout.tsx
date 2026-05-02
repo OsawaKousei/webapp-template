@@ -11,7 +11,6 @@ import {
 } from '../api/new-report-api';
 import { useNewReportStore } from '../stores/use-new-report-store';
 import { NewReportHeaderWidget } from '../widgets/new-report-header-widget';
-import { NewReportStepHumanizeWidget } from '../widgets/new-report-step-humanize-widget';
 import { NewReportStepOutlineWidget } from '../widgets/new-report-step-outline-widget';
 import { NewReportStepOverviewWidget } from '../widgets/new-report-step-overview-widget';
 import { NewReportStepReferenceWidget } from '../widgets/new-report-step-reference-widget';
@@ -69,7 +68,6 @@ export const NewReportLayout = () => {
     .with(2, () => <NewReportStepReferenceWidget />)
     .with(3, () => <NewReportStepToneWidget />)
     .with(4, () => <NewReportStepOutlineWidget />)
-    .with(5, () => <NewReportStepHumanizeWidget />)
     .otherwise(() => null);
 
   const phaseCount = enableHumanize ? 5 : 4;

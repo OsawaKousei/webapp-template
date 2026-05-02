@@ -1,7 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +8,6 @@ import { useNewReportStore } from '../stores/use-new-report-store';
 
 export const NewReportStepOutlineWidget = () => {
   const outline = useNewReportStore((state) => state.outline);
-  const enableHumanize = useNewReportStore((state) => state.enableHumanize);
   const actions = useNewReportStore((state) => state.actions);
 
   return (
@@ -68,15 +66,6 @@ export const NewReportStepOutlineWidget = () => {
             </Card>
           );
         })}
-      </div>
-      <div className="flex items-center gap-2 text-sm">
-        <Checkbox
-          checked={enableHumanize}
-          onCheckedChange={(checked) => {
-            actions.setEnableHumanize(Boolean(checked));
-          }}
-        />
-        <span>人間らしいレポートに調整する</span>
       </div>
     </div>
   );
