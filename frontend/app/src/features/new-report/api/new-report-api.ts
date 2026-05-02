@@ -53,7 +53,6 @@ type GenerateReportArgs = {
   readonly aiMode: string;
   readonly tone: string;
   readonly reference: readonly string[];
-  readonly humanize: boolean;
 };
 
 const toGenerateReportTone = (tone: string): 'formal' | 'balanced' | 'casual' => {
@@ -131,18 +130,4 @@ export const generateReportAsync = async (args: GenerateReportArgs) => {
   );
 
   return response;
-};
-
-export const runHumanizeAsync = async (reportId: string, checkerKey: string) => {
-  await requestJsonAsync(
-    {
-      path: '/api/report/humanize',
-      method: 'POST',
-      body: {
-        reportId,
-        checker: checkerKey,
-      },
-    },
-    emptySchema,
-  );
 };

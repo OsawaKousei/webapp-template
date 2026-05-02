@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   generateOutlineAsync,
   generateReportAsync,
-  runHumanizeAsync,
 } from '../api/new-report-api';
 import { useNewReportStore } from '../stores/use-new-report-store';
 import { NewReportHeaderWidget } from '../widgets/new-report-header-widget';
@@ -40,7 +39,6 @@ const phaseLabel = (phase: number) => {
     .with(2, () => '参考資料')
     .with(3, () => '口調')
     .with(4, () => '目次')
-    .with(5, () => 'Humanize')
     .otherwise(() => '未定義');
 };
 
@@ -57,8 +55,6 @@ export const NewReportLayout = () => {
   const outline = useNewReportStore((state) => state.outline);
   const tone = useNewReportStore((state) => state.tone);
   const uploadedFiles = useNewReportStore((state) => state.uploadedFiles);
-  const enableHumanize = useNewReportStore((state) => state.enableHumanize);
-  const checkers = useNewReportStore((state) => state.humanizeCheckers);
   const isBusy = useNewReportStore((state) => state.isBusy);
   const errorMessage = useNewReportStore((state) => state.errorMessage);
   const actions = useNewReportStore((state) => state.actions);
@@ -70,7 +66,7 @@ export const NewReportLayout = () => {
     .with(4, () => <NewReportStepOutlineWidget />)
     .otherwise(() => null);
 
-  const phaseCount = enableHumanize ? 5 : 4;
+  const phaseCount = 4;
 
   const canProceed = useMemo(() => {
     if (currentPhase === 1) {
@@ -102,20 +98,6 @@ export const NewReportLayout = () => {
     tone,
     outline.length,
   ]);
-
-  const runHumanizeSequenceAsync = async (targetReportId: string) => {
-    await checkers.reduce(async (previous, checker) => {
-      await previous;
-      actions.setCheckerStatus(checker.key, 'checking');
-
-      try {
-        await runHumanizeAsync(targetReportId, checker.key);
-        actions.setCheckerStatus(checker.key, 'success');
-      } catch {
-        actions.setCheckerStatus(checker.key, 'fail');
-      }
-    }, Promise.resolve());
-  };
 
   const moveToNextAsync = async () => {
     if (!canProceed || isBusy) {
@@ -165,23 +147,10 @@ export const NewReportLayout = () => {
         reference: uploadedFiles.map((item) => {
           return item.referenceId;
         }),
-        humanize: enableHumanize,
       });
 
-      if (!enableHumanize) {
-        actions.clear();
-        navigate(`/report/${generatedReport.reportId}`);
-        return;
-      }
-
-      actions.setCurrentPhase(5);
-      actions.resetCheckers();
-      await runHumanizeSequenceAsync(generatedReport.reportId);
-
-      setTimeout(() => {
-        actions.clear();
-        navigate(`/report/${generatedReport.reportId}`);
-      }, 2000);
+      actions.clear();
+      navigate(`/report/${generatedReport.reportId}`);
     } catch {
       actions.clear();
       navigate('/home');
@@ -217,7 +186,7 @@ export const NewReportLayout = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={currentPhase === 1 || currentPhase === 5}
+                    disabled={currentPhase === 1}
                     onClick={() => {
                       actions.setCurrentPhase(Math.max(1, currentPhase - 1));
                     }}
@@ -240,11 +209,6 @@ export const NewReportLayout = () => {
                         <ArrowRight className="size-4" />
                       )}
                       AIでレポートを生成
-                    </Button>
-                  ) : currentPhase === 5 ? (
-                    <Button type="button" disabled>
-                      <LoaderCircle className="size-4 animate-spin" />
-                      Humanize実行中
                     </Button>
                   ) : (
                     <Button

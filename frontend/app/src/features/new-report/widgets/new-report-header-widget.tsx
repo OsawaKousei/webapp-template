@@ -7,10 +7,9 @@ export const NewReportHeaderWidget = () => {
   const title = useNewReportStore((state) => state.title);
   const currentPhase = useNewReportStore((state) => state.currentPhase);
   const completedPhases = useNewReportStore((state) => state.completedPhases);
-  const enableHumanize = useNewReportStore((state) => state.enableHumanize);
   const actions = useNewReportStore((state) => state.actions);
 
-  const phaseCount = enableHumanize ? 5 : 4;
+  const phaseCount = 4;
 
   return (
     <NewReportHeaderView

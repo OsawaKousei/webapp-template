@@ -8,7 +8,6 @@ const phaseLabel = (phase: number) => {
     .with(2, () => '参考資料')
     .with(3, () => '口調')
     .with(4, () => '目次')
-    .with(5, () => 'Humanize')
     .otherwise(() => '未定義');
 };
 

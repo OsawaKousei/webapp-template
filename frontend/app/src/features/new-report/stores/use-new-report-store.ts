@@ -15,12 +15,6 @@ type OutlineItem = {
   readonly summary: string;
 };
 
-type HumanizeCheckerState = {
-  readonly key: string;
-  readonly label: string;
-  readonly status: 'idle' | 'checking' | 'success' | 'fail';
-};
-
 type NewReportState = {
   readonly currentPhase: number;
   readonly completedPhases: readonly number[];
@@ -35,8 +29,6 @@ type NewReportState = {
   readonly uploadedFiles: readonly UploadedReference[];
   readonly tone: Tone;
   readonly outline: readonly OutlineItem[];
-  readonly enableHumanize: boolean;
-  readonly humanizeCheckers: readonly HumanizeCheckerState[];
   readonly actions: {
     readonly initialize: () => void;
     readonly clear: () => void;
@@ -58,13 +50,21 @@ type NewReportState = {
     readonly updateOutlineItem: (item: OutlineItem) => void;
     readonly deleteOutlineItem: (order: number) => void;
     readonly addOutlineItem: () => void;
-    readonly setEnableHumanize: (value: boolean) => void;
-    readonly setCheckerStatus: (
-      checkerKey: string,
-      status: HumanizeCheckerState['status'],
-    ) => void;
-    readonly resetCheckers: () => void;
   };
+};
+
+type HydratedState = {
+  currentPhase?: number;
+  completedPhases?: readonly number[];
+  overview?: string;
+  wordCount?: string;
+  aiMode?: string;
+  overviewMode?: OverviewMode;
+  overviewFile?: UploadedReference | null;
+  title?: string;
+  uploadedFiles?: readonly UploadedReference[];
+  tone?: Tone;
+  outline?: readonly OutlineItem[];
 };
 
 const KEY = {
@@ -74,20 +74,14 @@ const KEY = {
   wordCount: 'report_word_count',
   aiMode: 'report_model',
   overviewMode: 'report_is_file_upload',
+  overviewFile: 'report_overview_file',
   title: 'report_title',
   references: 'reference_uploaded_files',
   tone: 'tone_selection',
   outline: 'outline_items',
-  enableHumanize: 'enable_humanize',
 } as const;
 
-const createInitialCheckers = (): readonly HumanizeCheckerState[] => {
-  return [
-    { key: 'naturalness', label: '自然な文体チェック', status: 'idle' },
-    { key: 'coherence', label: '整合性チェック', status: 'idle' },
-    { key: 'readability', label: '可読性チェック', status: 'idle' },
-  ];
-};
+const PERSIST_KEYS = Object.values(KEY);
 
 const initialState = {
   currentPhase: 1,
@@ -103,8 +97,6 @@ const initialState = {
   uploadedFiles: [] as readonly UploadedReference[],
   tone: 'desu-masu' as const,
   outline: [] as readonly OutlineItem[],
-  enableHumanize: false,
-  humanizeCheckers: createInitialCheckers(),
 };
 
 const safeSessionStorage = () => {
@@ -128,11 +120,199 @@ const persistState = (state: NewReportState) => {
   storage.setItem(KEY.wordCount, state.wordCount);
   storage.setItem(KEY.aiMode, state.aiMode);
   storage.setItem(KEY.overviewMode, String(state.overviewMode === 'file'));
+  storage.setItem(KEY.overviewFile, JSON.stringify(state.overviewFile));
   storage.setItem(KEY.title, state.title);
   storage.setItem(KEY.references, JSON.stringify(state.uploadedFiles));
   storage.setItem(KEY.tone, state.tone);
   storage.setItem(KEY.outline, JSON.stringify(state.outline));
-  storage.setItem(KEY.enableHumanize, JSON.stringify(state.enableHumanize));
+};
+
+const clearPersistedState = () => {
+  const storage = safeSessionStorage();
+
+  if (storage === null) {
+    return;
+  }
+
+  PERSIST_KEYS.forEach((key) => {
+    storage.removeItem(key);
+  });
+};
+
+const parseNumber = (value: string | null) => {
+  if (value === null) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed)) {
+    return null;
+  }
+
+  return parsed;
+};
+
+const parseJson = <T>(value: string | null): T | null => {
+  if (value === null) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+};
+
+const isOverviewMode = (value: string): value is OverviewMode => {
+  return value === 'text' || value === 'file';
+};
+
+const isTone = (value: string): value is Tone => {
+  return value === 'desu-masu' || value === 'dearu-da';
+};
+
+const isUploadedReference = (value: unknown): value is UploadedReference => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return (
+    typeof record.referenceId === 'string' &&
+    typeof record.name === 'string' &&
+    typeof record.size === 'number'
+  );
+};
+
+const isOutlineItem = (value: unknown): value is OutlineItem => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return (
+    typeof record.order === 'number' &&
+    typeof record.title === 'string' &&
+    typeof record.summary === 'string'
+  );
+};
+
+const hydrateState = (): HydratedState => {
+  const storage = safeSessionStorage();
+
+  if (storage === null) {
+    return {};
+  }
+
+  const next: HydratedState = {};
+  const storedPhase = parseNumber(storage.getItem(KEY.currentPhase));
+
+  if (storedPhase !== null && storedPhase >= 1 && storedPhase <= 5) {
+    next.currentPhase = storedPhase;
+  }
+
+  const storedCompletedPhases = parseJson<unknown[]>(
+    storage.getItem(KEY.completedPhases),
+  );
+
+  if (
+    storedCompletedPhases !== null &&
+    Array.isArray(storedCompletedPhases) &&
+    storedCompletedPhases.every((phase) => {
+      return typeof phase === 'number';
+    })
+  ) {
+    next.completedPhases = storedCompletedPhases;
+  }
+
+  const storedOverview = storage.getItem(KEY.overview);
+
+  if (storedOverview !== null) {
+    next.overview = storedOverview;
+  }
+
+  const storedWordCount = storage.getItem(KEY.wordCount);
+
+  if (storedWordCount !== null) {
+    next.wordCount = storedWordCount;
+  }
+
+  const storedAiMode = storage.getItem(KEY.aiMode);
+
+  if (storedAiMode !== null) {
+    next.aiMode = storedAiMode;
+  }
+
+  const storedOverviewModeRaw = storage.getItem(KEY.overviewMode);
+
+  if (storedOverviewModeRaw !== null) {
+    if (storedOverviewModeRaw === 'true') {
+      next.overviewMode = 'file';
+    }
+
+    if (storedOverviewModeRaw === 'false') {
+      next.overviewMode = 'text';
+    }
+
+    if (isOverviewMode(storedOverviewModeRaw)) {
+      next.overviewMode = storedOverviewModeRaw;
+    }
+  }
+
+  const storedOverviewFile = parseJson<unknown>(
+    storage.getItem(KEY.overviewFile),
+  );
+
+  if (storedOverviewFile === null) {
+    next.overviewFile = null;
+  }
+
+  if (isUploadedReference(storedOverviewFile)) {
+    next.overviewFile = storedOverviewFile;
+  }
+
+  const storedTitle = storage.getItem(KEY.title);
+
+  if (storedTitle !== null) {
+    next.title = storedTitle;
+  }
+
+  const storedReferences = parseJson<unknown[]>(storage.getItem(KEY.references));
+
+  if (storedReferences !== null && Array.isArray(storedReferences)) {
+    next.uploadedFiles = storedReferences.filter((item) => {
+      return isUploadedReference(item);
+    });
+  }
+
+  const storedTone = storage.getItem(KEY.tone);
+
+  if (storedTone !== null && isTone(storedTone)) {
+    next.tone = storedTone;
+  }
+
+  const storedOutline = parseJson<unknown[]>(storage.getItem(KEY.outline));
+
+  if (storedOutline !== null && Array.isArray(storedOutline)) {
+    const normalizedOutline = storedOutline
+      .filter((item) => {
+        return isOutlineItem(item);
+      })
+      .map((item, index) => {
+        return {
+          ...item,
+          order: index + 1,
+        };
+      });
+
+    next.outline = normalizedOutline;
+  }
+
+  return next;
 };
 
 export const useNewReportStore = create<NewReportState>((set, get) => {
@@ -152,10 +332,10 @@ export const useNewReportStore = create<NewReportState>((set, get) => {
     actions: {
       initialize: () => {
         set((state) => {
-          safeSessionStorage()?.clear();
           const next = {
             ...state,
             ...initialState,
+            ...hydrateState(),
             actions: state.actions,
           };
           persistState(next);
@@ -164,8 +344,7 @@ export const useNewReportStore = create<NewReportState>((set, get) => {
       },
       clear: () => {
         set(() => {
-          const storage = safeSessionStorage();
-          storage?.clear();
+          clearPersistedState();
           return {
             ...initialState,
             actions: get().actions,
@@ -272,38 +451,11 @@ export const useNewReportStore = create<NewReportState>((set, get) => {
           ],
         });
       },
-      setEnableHumanize: (value) => {
-        withPersist({ enableHumanize: value });
-      },
-      setCheckerStatus: (checkerKey, status) => {
-        set((prev) => {
-          return {
-            ...prev,
-            humanizeCheckers: prev.humanizeCheckers.map((checker) => {
-              return checker.key === checkerKey
-                ? {
-                  ...checker,
-                  status,
-                }
-                : checker;
-            }),
-          };
-        });
-      },
-      resetCheckers: () => {
-        set((prev) => {
-          return {
-            ...prev,
-            humanizeCheckers: createInitialCheckers(),
-          };
-        });
-      },
     },
   };
 });
 
 export type {
-  HumanizeCheckerState,
   OutlineItem,
   Tone,
   UploadedReference,
