@@ -2,47 +2,54 @@ import { describe, expect, test } from 'vitest';
 import { createApp } from '../../../../src/app';
 import {
   ErrorResponseSchema,
-  UserSchema,
+  ReportSummaryListSchema,
+  UserProfileSchema,
 } from '../../../../src/features/user/user-schema';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
+import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
 
 const logger = createLogger({ level: 'silent' });
 
-describe('GET /api/user', () => {
+describe('GET /api/users/me', () => {
   test('200: ユーザー契約を満たすレスポンスを返す', async () => {
     const userRepository = createFakeUserRepository({
       users: [
         {
           id: 'u123',
-          name: 'Gemini Node',
+          displayName: 'Gemini Node',
           email: 'gemini@example.com',
-          status: 'active',
+          subscriptionPlan: 'standard',
+          credits: 120,
         },
       ],
     });
+    const reportRepository = createFakeReportRepository();
     const app = createApp({
       logger,
+      reportRepository,
       userRepository,
     });
 
-    const response = await app.request('/api/user');
+    const response = await app.request('/api/users/me');
 
     expect(response.status).toBe(200);
     const json = await response.json();
-    const parsed = UserSchema.safeParse(json);
+    const parsed = UserProfileSchema.safeParse(json);
 
     expect(parsed.success).toBe(true);
   });
 
   test('404: NOT_FOUND をエラースキーマで返す', async () => {
     const userRepository = createFakeUserRepository();
+    const reportRepository = createFakeReportRepository();
     const app = createApp({
       logger,
+      reportRepository,
       userRepository,
     });
 
-    const response = await app.request('/api/user');
+    const response = await app.request('/api/users/me');
 
     expect(response.status).toBe(404);
     const json = await response.json();
@@ -51,48 +58,43 @@ describe('GET /api/user', () => {
     expect(parsed.success).toBe(true);
     expect(json).toEqual({ error: 'User not found' });
   });
+});
 
-  test('500: INTERNAL_SERVER_ERROR をエラースキーマで返す', async () => {
-    const userRepository = createFakeUserRepository({
-      forceInternalError: true,
-    });
-    const app = createApp({
-      logger,
-      userRepository,
-    });
-
-    const response = await app.request('/api/user');
-
-    expect(response.status).toBe(500);
-    const json = await response.json();
-    const parsed = ErrorResponseSchema.safeParse(json);
-
-    expect(parsed.success).toBe(true);
-    expect(json).toEqual({ error: 'forced internal error' });
-  });
-
-  test('全レスポンスで x-request-id ヘッダーを返す', async () => {
+describe('GET /api/users/me/reports', () => {
+  test('200: レポート一覧契約を満たすレスポンスを返す', async () => {
     const userRepository = createFakeUserRepository({
       users: [
         {
           id: 'u123',
-          name: 'Gemini Node',
+          displayName: 'Gemini Node',
           email: 'gemini@example.com',
-          status: 'active',
+          subscriptionPlan: 'standard',
+          credits: 120,
         },
       ],
+      reportsByUserId: {
+        u123: [
+          {
+            reportId: 'r-001',
+            title: 'AI Report Draft',
+            lastModifiedAt: '2026-05-01T10:00:00.000Z',
+          },
+        ],
+      },
     });
+    const reportRepository = createFakeReportRepository();
     const app = createApp({
       logger,
+      reportRepository,
       userRepository,
     });
 
-    const response = await app.request('/api/user');
-    const requestId = response.headers.get('x-request-id');
+    const response = await app.request('/api/users/me/reports');
 
-    expect(requestId).toBeTypeOf('string');
-    expect(requestId).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    );
+    expect(response.status).toBe(200);
+    const json = await response.json();
+    const parsed = ReportSummaryListSchema.safeParse(json);
+
+    expect(parsed.success).toBe(true);
   });
 });

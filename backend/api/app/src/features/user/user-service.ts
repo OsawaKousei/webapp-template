@@ -1,7 +1,8 @@
 import type { Result } from 'neverthrow';
 import type { AppError } from '../../../shared/errors/app-error';
+import { CURRENT_USER_ID } from '../auth/current-user';
 import type { UserRepository } from './user-repo';
-import type { User } from './user-schema';
+import type { ReportSummary, UserProfile } from './user-schema';
 
 type GetUserByIdInput = {
   readonly userId: string;
@@ -12,17 +13,25 @@ type GetCurrentUserInput = {
   readonly userRepository: UserRepository;
 };
 
-const CURRENT_USER_ID = 'u123';
+type GetMyReportsInput = {
+  readonly userRepository: UserRepository;
+};
 
 export const getUserById = async ({
   userId,
   userRepository,
-}: GetUserByIdInput): Promise<Result<User, AppError>> => {
+}: GetUserByIdInput): Promise<Result<UserProfile, AppError>> => {
   return userRepository.findUserById({ userId });
 };
 
 export const getCurrentUser = async ({
   userRepository,
-}: GetCurrentUserInput): Promise<Result<User, AppError>> => {
+}: GetCurrentUserInput): Promise<Result<UserProfile, AppError>> => {
   return userRepository.findUserById({ userId: CURRENT_USER_ID });
+};
+
+export const getMyReports = async ({
+  userRepository,
+}: GetMyReportsInput): Promise<Result<ReportSummary[], AppError>> => {
+  return userRepository.findReportsByUserId({ userId: CURRENT_USER_ID });
 };

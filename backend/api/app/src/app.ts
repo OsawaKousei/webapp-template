@@ -1,15 +1,23 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import type { Logger } from 'pino';
+import { createAiRouter } from './features/ai/ai-router';
+import type { ReportRepository } from './features/report/report-repo';
+import { createReportRouter } from './features/report/report-router';
 import type { UserRepository } from './features/user/user-repo';
 import { createUserRouter } from './features/user/user-router';
 
 type CreateAppInput = {
   readonly logger: Logger;
+  readonly reportRepository: ReportRepository;
   readonly userRepository: UserRepository;
 };
 
-export const createApp = ({ logger, userRepository }: CreateAppInput): OpenAPIHono => {
+export const createApp = ({
+  logger,
+  reportRepository,
+  userRepository,
+}: CreateAppInput): OpenAPIHono => {
   const app = new OpenAPIHono();
 
   app.use('*', async (context, next) => {
@@ -47,7 +55,12 @@ export const createApp = ({ logger, userRepository }: CreateAppInput): OpenAPIHo
   });
 
   const userRouter = createUserRouter({ userRepository });
+  const reportRouter = createReportRouter({ reportRepository });
+  const aiRouter = createAiRouter({ reportRepository });
+
   app.route('/api', userRouter);
+  app.route('/api', reportRouter);
+  app.route('/api', aiRouter);
 
   return app;
 };
