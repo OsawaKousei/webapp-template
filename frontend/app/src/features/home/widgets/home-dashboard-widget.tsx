@@ -1,17 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HomeView } from '../components/home-view';
+import { HomeDashboardView } from '../components/home-dashboard-view';
 import {
   useCreateReportMutation,
   useDeleteReportMutation,
   useHomeReportsQuery,
-  useHomeUserQuery,
 } from '../api/use-home-query';
 import type { HomeReport } from '../api/home-api';
 
-export const HomeWidget = () => {
+export const HomeDashboardWidget = () => {
   const navigate = useNavigate();
-  const userQuery = useHomeUserQuery();
   const reportsQuery = useHomeReportsQuery();
   const createMutation = useCreateReportMutation();
   const deleteMutation = useDeleteReportMutation();
@@ -19,66 +17,61 @@ export const HomeWidget = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingTarget, setDeletingTarget] = useState<HomeReport | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const noop = () => undefined;
 
   const filteredProjects = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
+    const projectList = reportsQuery.data ?? [];
 
-    if (reportsQuery.data === undefined) {
-      return [] as const;
-    }
-
-    return reportsQuery.data.filter((report) => {
+    return projectList.filter((report) => {
       return report.title.toLowerCase().includes(normalizedQuery);
     });
   }, [reportsQuery.data, searchQuery]);
 
-  if (userQuery.isPending) {
-    return (
-      <HomeView
-        user={{
-          displayName: '-',
-          email: '-',
-          subscriptionPlan: '-',
-          credits: 0,
-        }}
-        projects={[]}
-        searchQuery={searchQuery}
-        errorMessage={null}
-        isLoading
-        isCreating={false}
-        deletingId={null}
-        deletingTarget={null}
-        onSearchChange={setSearchQuery}
-        onCreate={noop}
-        onOpenReport={noop}
-        onDeleteClick={noop}
-        onDeleteCancel={noop}
-        onDeleteConfirm={noop}
-        onLogout={() => {
-          navigate('/login');
-        }}
-      />
-    );
-  }
+  const state = (() => {
+    if (reportsQuery.isPending) {
+      return { status: 'loading' } as const;
+    }
 
-  if (userQuery.isError) {
-    navigate('/login');
-    return null;
-  }
+    if (reportsQuery.isError) {
+      return {
+        status: 'error',
+        message: reportsQuery.error.message,
+        onRetry: () => {
+          void reportsQuery.refetch();
+        },
+      } as const;
+    }
+
+    if (filteredProjects.length === 0) {
+      return {
+        status: 'empty',
+        hasQuery: searchQuery.trim().length > 0,
+      } as const;
+    }
+
+    return {
+      status: 'ready',
+      projects: filteredProjects,
+      deletingId: deleteMutation.isPending
+        ? (deletingTarget?.reportId ?? null)
+        : null,
+      onOpenReport: (reportId: string) => {
+        navigate(`/report/${reportId}`);
+      },
+      onDeleteClick: (project: HomeReport) => {
+        setDeletingTarget(project);
+      },
+    } as const;
+  })();
 
   return (
-    <HomeView
-      user={userQuery.data}
-      projects={filteredProjects}
+    <HomeDashboardView
+      state={state}
       searchQuery={searchQuery}
       errorMessage={errorMessage}
-      isLoading={reportsQuery.isPending}
       isCreating={createMutation.isPending}
-      deletingId={
-        deleteMutation.isPending ? (deletingTarget?.reportId ?? null) : null
-      }
       deletingTarget={deletingTarget}
+      isDeleting={deleteMutation.isPending}
       onSearchChange={setSearchQuery}
       onCreate={async () => {
         setErrorMessage(null);
@@ -93,12 +86,6 @@ export const HomeWidget = () => {
               : 'レポート作成に失敗しました。';
           setErrorMessage(message);
         }
-      }}
-      onOpenReport={(reportId) => {
-        navigate(`/report/${reportId}`);
-      }}
-      onDeleteClick={(project) => {
-        setDeletingTarget(project);
       }}
       onDeleteCancel={() => {
         setDeletingTarget(null);
@@ -116,9 +103,6 @@ export const HomeWidget = () => {
             error instanceof Error ? error.message : '削除に失敗しました。';
           setErrorMessage(message);
         }
-      }}
-      onLogout={() => {
-        navigate('/login');
       }}
     />
   );

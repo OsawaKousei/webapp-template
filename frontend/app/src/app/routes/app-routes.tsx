@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { LoginView } from '@/features/login/components/login-view';
-import { HomeWidget } from '@/features/home';
+import { HomeLayout } from '@/layouts/home-layout';
 import { NewReportWidget } from '@/features/new-report';
 import { ReportEditorWidget } from '@/features/report-editor';
 
@@ -25,7 +25,7 @@ export const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginRoute />} />
-      <Route path="/home" element={<HomeWidget />} />
+      <Route path="/home" element={<HomeLayout />} />
       <Route path="/new-report/:id" element={<NewReportWidget />} />
       <Route path="/report/:id" element={<ReportEditorWidget />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
