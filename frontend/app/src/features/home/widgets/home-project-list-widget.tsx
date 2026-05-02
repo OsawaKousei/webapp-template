@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HomeDashboardView } from '../components/home-dashboard-view';
+import { HomeProjectListView } from '../components/home-project-list-view';
 import {
   useCreateReportMutation,
   useDeleteReportMutation,
@@ -8,7 +8,7 @@ import {
 } from '../api/use-home-query';
 import type { HomeReport } from '../api/home-api';
 
-export const HomeDashboardWidget = () => {
+export const HomeProjectListWidget = () => {
   const navigate = useNavigate();
   const reportsQuery = useHomeReportsQuery();
   const createMutation = useCreateReportMutation();
@@ -65,7 +65,7 @@ export const HomeDashboardWidget = () => {
   })();
 
   return (
-    <HomeDashboardView
+    <HomeProjectListView
       state={state}
       searchQuery={searchQuery}
       errorMessage={errorMessage}

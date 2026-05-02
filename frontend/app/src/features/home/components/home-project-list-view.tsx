@@ -17,7 +17,7 @@ type ProjectData = {
   readonly lastModifiedAt: string;
 };
 
-type DashboardState =
+type ProjectListState =
   | { readonly status: 'loading' }
   | {
       readonly status: 'error';
@@ -33,8 +33,8 @@ type DashboardState =
       readonly onDeleteClick: (project: ProjectData) => void;
     };
 
-type HomeDashboardViewProps = {
-  readonly state: DashboardState;
+type HomeProjectListViewProps = {
+  readonly state: ProjectListState;
   readonly searchQuery: string;
   readonly errorMessage: string | null;
   readonly isCreating: boolean;
@@ -58,7 +58,7 @@ const EmptyState = ({ hasQuery }: { readonly hasQuery: boolean }) => {
   );
 };
 
-export const HomeDashboardView = ({
+export const HomeProjectListView = ({
   state,
   searchQuery,
   errorMessage,
@@ -69,7 +69,7 @@ export const HomeDashboardView = ({
   onCreate,
   onDeleteCancel,
   onDeleteConfirm,
-}: HomeDashboardViewProps) => {
+}: HomeProjectListViewProps) => {
   const content = (() => {
     if (state.status === 'loading') {
       return (
