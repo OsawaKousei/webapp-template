@@ -1,1 +1,1 @@
-export { NewReportWidget } from './widgets/new-report-widget';
+export { NewReportLayout } from './layouts/new-report-layout';

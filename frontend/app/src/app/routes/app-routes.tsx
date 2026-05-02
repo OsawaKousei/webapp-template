@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { LoginView } from '@/features/login/components/login-view';
+import { NewReportLayout } from '@/features/new-report/layouts/new-report-layout';
 import { HomeLayout } from '@/layouts/home-layout';
-import { NewReportWidget } from '@/features/new-report';
 import { ReportEditorWidget } from '@/features/report-editor';
 
 const LoginRoute = () => {
@@ -26,7 +26,7 @@ export const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/home" element={<HomeLayout />} />
-      <Route path="/new-report" element={<NewReportWidget />} />
+      <Route path="/new-report" element={<NewReportLayout />} />
       <Route path="/report/:id" element={<ReportEditorWidget />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

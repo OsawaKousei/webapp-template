@@ -24,6 +24,8 @@ type HumanizeCheckerState = {
 type NewReportState = {
   readonly currentPhase: number;
   readonly completedPhases: readonly number[];
+  readonly isBusy: boolean;
+  readonly errorMessage: string | null;
   readonly title: string;
   readonly overview: string;
   readonly overviewMode: OverviewMode;
@@ -38,6 +40,9 @@ type NewReportState = {
   readonly actions: {
     readonly initialize: () => void;
     readonly clear: () => void;
+    readonly setIsBusy: (value: boolean) => void;
+    readonly setErrorMessage: (value: string | null) => void;
+    readonly addCompletedPhase: (phase: number) => void;
     readonly setCurrentPhase: (phase: number) => void;
     readonly setCompletedPhases: (phases: readonly number[]) => void;
     readonly setTitle: (value: string) => void;
@@ -87,6 +92,8 @@ const createInitialCheckers = (): readonly HumanizeCheckerState[] => {
 const initialState = {
   currentPhase: 1,
   completedPhases: [] as readonly number[],
+  isBusy: false,
+  errorMessage: null,
   title: '新規レポート',
   overview: '',
   overviewMode: 'text' as const,
@@ -163,6 +170,31 @@ export const useNewReportStore = create<NewReportState>((set, get) => {
             ...initialState,
             actions: get().actions,
           };
+        });
+      },
+      setIsBusy: (value) => {
+        set((prev) => {
+          return {
+            ...prev,
+            isBusy: value,
+          };
+        });
+      },
+      setErrorMessage: (value) => {
+        set((prev) => {
+          return {
+            ...prev,
+            errorMessage: value,
+          };
+        });
+      },
+      addCompletedPhase: (phase) => {
+        if (get().completedPhases.includes(phase)) {
+          return;
+        }
+
+        withPersist({
+          completedPhases: [...get().completedPhases, phase],
         });
       },
       setCurrentPhase: (phase: number) => {
