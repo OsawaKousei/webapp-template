@@ -1,5 +1,5 @@
 import type { Result } from 'neverthrow';
-import type { AppError } from '../../../shared/errors/app-error';
+import type { AppError } from '@/shared/errors/app-error';
 import type { Outline, ReportDetail } from './report-schema';
 
 export type FindOutlineByUserIdInput = {

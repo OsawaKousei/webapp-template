@@ -8,8 +8,8 @@
 
 - GET /api/users/me
 - GET /api/users/me/reports
-- GET /api/reports/temp-drafts
-- DELETE /api/reports/temp-drafts
+- GET /api/reports/outline
+- DELETE /api/reports/outline
 - POST /api/ai/generate-outline
 
 この文書の役割:
@@ -125,14 +125,14 @@ Phase 1 は以下の3ドメインで構成する。
   - トリガ: POST /api/ai/generate-outline 成功
 - outline 存在 -> deleted
   - トリガ:
-    - DELETE /api/reports/temp-drafts
+    - DELETE /api/reports/outline
     - 新規作成時に破棄を選択
 
 ### 6.2 Outline の運用ルール
 
 - ユーザーごとに Outline は最大 1 件のみ保持する
 - /home から新規作成開始時、既存 Outline があれば UI で継続/破棄を確認する
-- 破棄選択時は DELETE /api/reports/temp-drafts で抹消する
+- 破棄選択時は DELETE /api/reports/outline で抹消する
 - 継続選択時に上書き生成する場合は、POST /api/ai/generate-outline に overwriteExisting=true を付与する
 
 ### 6.3 画面遷移とドメインイベント
@@ -154,7 +154,7 @@ Phase 1 は以下の3ドメインで構成する。
 - 入力: なし（認証コンテキスト）
 - 出力: ReportSummary[]
 
-### 7.3 GET /api/reports/temp-drafts
+### 7.3 GET /api/reports/outline
 
 - 入力: なし（認証コンテキスト）
 - 出力: Outline | null
@@ -162,7 +162,7 @@ Phase 1 は以下の3ドメインで構成する。
   - null は「Outline が保存されていない状態」を意味する
   - Outline が存在する場合、title と items は必須で返す
 
-### 7.4 DELETE /api/reports/temp-drafts
+### 7.4 DELETE /api/reports/outline
 
 - 入力: なし（認証コンテキスト）
 - 出力: 削除結果

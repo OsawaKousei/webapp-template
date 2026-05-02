@@ -8,7 +8,7 @@ import {
   createInternalServerError,
   createNotFoundError,
   type AppError,
-} from '../../../shared/errors/app-error';
+} from '@/shared/errors/app-error';
 
 const userRecordById: Readonly<Record<string, UserProfile>> = {
   u123: {

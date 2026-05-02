@@ -213,6 +213,74 @@ describe('POST /api/ai/generate-report', () => {
     expect(parsed.success).toBe(true);
   });
 
+  test('200: 生成後に GET /api/reports/{reportId} で本文を取得できる', async () => {
+    const reportRepository = createFakeReportRepository({
+      initialOutlineByUserId: {
+        u123: {
+          userId: 'u123',
+          overview: '概要',
+          title: 'タイトル',
+          items: [
+            {
+              title: '導入',
+              summary: '要点',
+              order: 1,
+            },
+          ],
+          createdAt: '2026-05-01T10:00:00.000Z',
+          updatedAt: '2026-05-01T10:00:00.000Z',
+        },
+      },
+    });
+    const app = createApp({
+      logger,
+      reportRepository,
+      userRepository,
+    });
+
+    const generateResponse = await app.request('/api/ai/generate-report', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        tone: 'balanced',
+      }),
+    });
+
+    expect(generateResponse.status).toBe(200);
+    const generated = await generateResponse.json();
+
+    const getResponse = await app.request(`/api/reports/${generated.reportId}`);
+    expect(getResponse.status).toBe(200);
+    const detail = await getResponse.json();
+
+    expect(detail.reportId).toBe(generated.reportId);
+    expect(detail.title).toBe(generated.title);
+    expect(detail.content).toBe(generated.content);
+  });
+
+  test('400: tone が不正値ならバリデーションエラー', async () => {
+    const reportRepository = createFakeReportRepository();
+    const app = createApp({
+      logger,
+      reportRepository,
+      userRepository,
+    });
+
+    const response = await app.request('/api/ai/generate-report', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        tone: 'invalid',
+      }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
   test('404: outline がない場合は not found', async () => {
     const reportRepository = createFakeReportRepository();
     const app = createApp({

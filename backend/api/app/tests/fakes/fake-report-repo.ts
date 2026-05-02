@@ -2,7 +2,7 @@ import { err, ok, type Result } from 'neverthrow';
 import {
   createInternalServerError,
   type AppError,
-} from '../../shared/errors/app-error';
+} from '@/shared/errors/app-error';
 import type {
   DeleteOutlineByUserIdInput,
   FindReportByIdInput,

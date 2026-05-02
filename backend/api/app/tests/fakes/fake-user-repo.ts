@@ -3,7 +3,7 @@ import {
   createInternalServerError,
   createNotFoundError,
   type AppError,
-} from '../../shared/errors/app-error';
+} from '@/shared/errors/app-error';
 import type {
   FindReportsByUserIdInput,
   FindUserByIdInput,

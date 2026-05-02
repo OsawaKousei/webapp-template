@@ -3,7 +3,7 @@ import {
   createConflictError,
   createNotFoundError,
   type AppError,
-} from '../../../shared/errors/app-error';
+} from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from '../report/report-repo';
 import type {

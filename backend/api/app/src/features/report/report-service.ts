@@ -1,8 +1,5 @@
 import { err, ok, type Result } from 'neverthrow';
-import {
-  createNotFoundError,
-  type AppError,
-} from '../../../shared/errors/app-error';
+import { createNotFoundError, type AppError } from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from './report-repo';
 import type { Outline, ReportDetail, SaveReportRequest } from './report-schema';

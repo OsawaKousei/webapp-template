@@ -1,5 +1,5 @@
 import type { Result } from 'neverthrow';
-import type { AppError } from '../../../shared/errors/app-error';
+import type { AppError } from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { UserRepository } from './user-repo';
 import type { ReportSummary, UserProfile } from './user-schema';

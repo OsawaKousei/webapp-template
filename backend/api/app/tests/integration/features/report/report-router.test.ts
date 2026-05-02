@@ -144,6 +144,28 @@ describe('report-router', () => {
     expect(json.title).toBe('編集後タイトル');
   });
 
+  test('POST /api/reports/:reportId: title が空白のみなら 400', async () => {
+    const reportRepository = createFakeReportRepository();
+    const app = createApp({
+      logger,
+      reportRepository,
+      userRepository,
+    });
+
+    const response = await app.request('/api/reports/r-201', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: '   ',
+        content: '本文',
+      }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
   test('GET /api/reports/:reportId: report がない場合は 404', async () => {
     const reportRepository = createFakeReportRepository();
     const app = createApp({
