@@ -67,11 +67,43 @@ export const GenerateReportResponseSchema = z.object({
   content: z.string().trim().min(1),
 });
 
+export const QuoteReferenceTypeSchema = z.union([
+  z.literal('book'),
+  z.literal('article'),
+  z.literal('website'),
+]);
+
+export const QuoteSchema = z.object({
+  id: z.number().int().min(1),
+  text: z.string().min(1),
+  source: z.string().min(1),
+  page: z.string().optional(),
+  referenceType: QuoteReferenceTypeSchema.optional(),
+  authors: z.string().optional(),
+  title: z.string().optional(),
+  year: z.string().optional(),
+  publisher: z.string().optional(),
+  journal: z.string().optional(),
+  volume: z.string().optional(),
+  issue: z.string().optional(),
+  pages: z.string().optional(),
+  url: z.string().optional(),
+  accessDate: z.string().optional(),
+});
+
+export const ReferenceSchema = z.object({
+  id: z.number().int().min(1),
+  quote: QuoteSchema,
+  content: z.string().min(1),
+  object_url: z.string().optional(),
+});
+
 export const ReportDetailSchema = z.object({
   reportId: z.string().min(1),
   userId: z.string().min(1),
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
+  references: z.array(ReferenceSchema),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
 });
@@ -79,6 +111,7 @@ export const ReportDetailSchema = z.object({
 export const SaveReportRequestSchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
+  references: z.array(ReferenceSchema).optional().default([]),
 });
 
 export const DeleteOutlineResponseSchema = z.object({
@@ -101,5 +134,8 @@ export type GenerateReportRequest = z.infer<typeof GenerateReportRequestSchema>;
 export type GenerateReportResponse = z.infer<
   typeof GenerateReportResponseSchema
 >;
+export type QuoteReferenceType = z.infer<typeof QuoteReferenceTypeSchema>;
+export type Quote = z.infer<typeof QuoteSchema>;
+export type Reference = z.infer<typeof ReferenceSchema>;
 export type ReportDetail = z.infer<typeof ReportDetailSchema>;
 export type SaveReportRequest = z.infer<typeof SaveReportRequestSchema>;

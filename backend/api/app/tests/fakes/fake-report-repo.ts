@@ -32,6 +32,14 @@ const cloneOutline = (outline: Outline): Outline => {
 const cloneReport = (report: ReportDetail): ReportDetail => {
   return {
     ...report,
+    references: report.references.map((reference) => {
+      return {
+        ...reference,
+        quote: {
+          ...reference.quote,
+        },
+      };
+    }),
   };
 };
 

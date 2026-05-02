@@ -209,6 +209,7 @@ export const generateReport = async ({
       userId: CURRENT_USER_ID,
       title: generated.title,
       content: generated.content,
+      references: [],
       createdAt: now,
       updatedAt: now,
     },

@@ -102,6 +102,7 @@ export const saveMyReportById = async ({
     userId: CURRENT_USER_ID,
     title: request.title,
     content: request.content,
+    references: request.references,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

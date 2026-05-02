@@ -98,6 +98,7 @@ describe('report-router', () => {
           userId: 'u123',
           title: '保存済みタイトル',
           content: '保存済み本文',
+          references: [],
           createdAt: '2026-05-01T10:00:00.000Z',
           updatedAt: '2026-05-01T10:00:00.000Z',
         },
