@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { createApp } from '../../../../src/app';
+import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import {
   OutlineSchema,
   ReportDetailSchema,
@@ -13,7 +14,7 @@ const logger = createLogger({ level: 'silent' });
 const userRepository = createFakeUserRepository({
   users: [
     {
-      id: 'u123',
+      id: CURRENT_USER_ID,
       displayName: 'Gemini Node',
       email: 'gemini@example.com',
       subscriptionPlan: 'standard',
@@ -41,8 +42,8 @@ describe('report-router', () => {
   test('GET /api/reports/outline: outline がある場合契約を満たす', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '概要',
           title: 'タイトル',
           items: [
@@ -95,7 +96,7 @@ describe('report-router', () => {
       initialReportByReportId: {
         'r-100': {
           reportId: 'r-100',
-          userId: 'u123',
+          userId: CURRENT_USER_ID,
           title: '保存済みタイトル',
           content: '保存済み本文',
           references: [],

@@ -3,6 +3,7 @@ import {
   generateOutline,
   generateReport,
 } from '../../../../src/features/ai/ai-service';
+import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 
 describe('ai-service', () => {
@@ -32,8 +33,8 @@ describe('ai-service', () => {
   test('generateOutline: 既存outlineありでoverwriteExisting未指定はCONFLICT', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '既存概要',
           title: '既存タイトル',
           items: [
@@ -72,8 +73,8 @@ describe('ai-service', () => {
   test('generateReport: outline から本文を生成して保存できる', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '概要',
           title: 'タイトル',
           items: [

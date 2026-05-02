@@ -4,10 +4,11 @@ import {
   getMyReports,
   getUserById,
 } from '../../../../src/features/user/user-service';
+import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
 
 const activeUser = {
-  id: 'u123',
+  id: CURRENT_USER_ID,
   displayName: 'Gemini Node',
   email: 'gemini@example.com',
   subscriptionPlan: 'standard',
@@ -21,7 +22,7 @@ describe('user-service', () => {
     });
 
     const result = await getUserById({
-      userId: 'u123',
+      userId: CURRENT_USER_ID,
       userRepository,
     });
 
@@ -30,7 +31,7 @@ describe('user-service', () => {
       return;
     }
 
-    expect(result.value.id).toBe('u123');
+    expect(result.value.id).toBe(CURRENT_USER_ID);
     expect(result.value.email).toBe('gemini@example.com');
   });
 
@@ -38,7 +39,7 @@ describe('user-service', () => {
     const userRepository = createFakeUserRepository({
       users: [activeUser],
       reportsByUserId: {
-        u123: [
+        [CURRENT_USER_ID]: [
           {
             reportId: 'r-001',
             title: 'AI Report Draft',

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { createApp } from '../../../../src/app';
+import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import {
   GenerateOutlineResponseSchema,
   GenerateReportResponseSchema,
@@ -13,7 +14,7 @@ const logger = createLogger({ level: 'silent' });
 const userRepository = createFakeUserRepository({
   users: [
     {
-      id: 'u123',
+      id: CURRENT_USER_ID,
       displayName: 'Gemini Node',
       email: 'gemini@example.com',
       subscriptionPlan: 'standard',
@@ -56,8 +57,8 @@ describe('POST /api/ai/generate-outline', () => {
   test('409: 既存outlineありで overwriteExisting 未指定は conflict', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '既存概要',
           title: '既存タイトル',
           items: [
@@ -102,8 +103,8 @@ describe('POST /api/ai/generate-outline', () => {
   test('200: 既存outlineありでも overwriteExisting=true なら上書きできる', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '既存概要',
           title: '既存タイトル',
           items: [
@@ -174,8 +175,8 @@ describe('POST /api/ai/generate-report', () => {
   test('200: outline から本文を生成できる', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '概要',
           title: 'タイトル',
           items: [
@@ -216,8 +217,8 @@ describe('POST /api/ai/generate-report', () => {
   test('200: 生成後に GET /api/reports/{reportId} で本文を取得できる', async () => {
     const reportRepository = createFakeReportRepository({
       initialOutlineByUserId: {
-        u123: {
-          userId: 'u123',
+        [CURRENT_USER_ID]: {
+          userId: CURRENT_USER_ID,
           overview: '概要',
           title: 'タイトル',
           items: [

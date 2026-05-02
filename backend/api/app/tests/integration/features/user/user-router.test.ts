@@ -5,6 +5,7 @@ import {
   ReportSummaryListSchema,
   UserProfileSchema,
 } from '../../../../src/features/user/user-schema';
+import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
@@ -16,7 +17,7 @@ describe('GET /api/users/me', () => {
     const userRepository = createFakeUserRepository({
       users: [
         {
-          id: 'u123',
+          id: CURRENT_USER_ID,
           displayName: 'Gemini Node',
           email: 'gemini@example.com',
           subscriptionPlan: 'standard',
@@ -65,7 +66,7 @@ describe('GET /api/users/me/reports', () => {
     const userRepository = createFakeUserRepository({
       users: [
         {
-          id: 'u123',
+          id: CURRENT_USER_ID,
           displayName: 'Gemini Node',
           email: 'gemini@example.com',
           subscriptionPlan: 'standard',
@@ -73,7 +74,7 @@ describe('GET /api/users/me/reports', () => {
         },
       ],
       reportsByUserId: {
-        u123: [
+        [CURRENT_USER_ID]: [
           {
             reportId: 'r-001',
             title: 'AI Report Draft',
