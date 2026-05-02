@@ -1,6 +1,7 @@
 volumes:
   frontend-node-modules:
   api-node-modules:
+  db-data:
 
 services:
   frontend:
@@ -41,6 +42,17 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: local
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: myapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
 
 networks:
   default:
