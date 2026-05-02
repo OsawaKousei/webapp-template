@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { NewReportView } from '../components/new-report-view';
 import { useNewReportStore } from '../stores/use-new-report-store';
 import {
@@ -12,8 +12,6 @@ import {
 
 export const NewReportWidget = () => {
   const navigate = useNavigate();
-  const params = useParams();
-  const reportId = params.id ?? '';
 
   const currentPhase = useNewReportStore((state) => state.currentPhase);
   const completedPhases = useNewReportStore((state) => state.completedPhases);
@@ -34,13 +32,8 @@ export const NewReportWidget = () => {
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    if (reportId.length === 0) {
-      navigate('/home');
-      return;
-    }
-
-    actions.initialize(reportId);
-  }, [actions, navigate, reportId]);
+    actions.initialize();
+  }, [actions]);
 
   const phaseCount = enableHumanize ? 5 : 4;
 
@@ -98,10 +91,10 @@ export const NewReportWidget = () => {
           overview,
           wordCount,
           aiMode,
-          reference: uploadedFiles.map((file) => {
+          reference_ids: uploadedFiles.map((file) => {
             return file.referenceId;
           }),
-          overviewReferenceId: overviewFile?.referenceId ?? null,
+          overview_reference_id: overviewFile?.referenceId ?? null,
         });
 
         actions.setTitle(result.title);
@@ -133,13 +126,13 @@ export const NewReportWidget = () => {
     actions.setCurrentPhase(Math.min(currentPhase + 1, phaseCount));
   };
 
-  const runHumanizeSequenceAsync = async () => {
+  const runHumanizeSequenceAsync = async (targetReportId: string) => {
     await checkers.reduce(async (previous, checker) => {
       await previous;
       actions.setCheckerStatus(checker.key, 'checking');
 
       try {
-        await runHumanizeAsync(reportId, checker.key);
+        await runHumanizeAsync(targetReportId, checker.key);
         actions.setCheckerStatus(checker.key, 'success');
       } catch {
         actions.setCheckerStatus(checker.key, 'fail');
@@ -153,7 +146,6 @@ export const NewReportWidget = () => {
 
     try {
       const generatedReport = await generateReportAsync({
-        reportId,
         overview,
         title,
         outline,
@@ -174,7 +166,7 @@ export const NewReportWidget = () => {
 
       actions.setCurrentPhase(5);
       actions.resetCheckers();
-      await runHumanizeSequenceAsync();
+      await runHumanizeSequenceAsync(generatedReport.reportId);
 
       setTimeout(() => {
         actions.clear();
@@ -190,7 +182,6 @@ export const NewReportWidget = () => {
 
   return (
     <NewReportView
-      reportId={reportId}
       title={title}
       phaseCount={phaseCount}
       currentPhase={currentPhase}
@@ -225,13 +216,9 @@ export const NewReportWidget = () => {
       onSetOverview={actions.setOverview}
       onUploadOverviewFile={(file) => {
         void (async () => {
-          if (reportId.length === 0) {
-            return;
-          }
-
           try {
             setIsBusy(true);
-            const uploaded = await uploadReferenceAsync(reportId, file);
+            const uploaded = await uploadReferenceAsync(file);
             actions.setOverviewFile(uploaded);
           } catch (error: unknown) {
             const message =
@@ -266,7 +253,7 @@ export const NewReportWidget = () => {
           await previous;
 
           try {
-            const uploaded = await uploadReferenceAsync(reportId, file);
+            const uploaded = await uploadReferenceAsync(file);
             actions.addReference(uploaded);
           } catch {
             // APIが未実装の場合はこのファイルをスキップする。

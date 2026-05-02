@@ -26,7 +26,7 @@ export const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/home" element={<HomeLayout />} />
-      <Route path="/new-report/:id" element={<NewReportWidget />} />
+      <Route path="/new-report" element={<NewReportWidget />} />
       <Route path="/report/:id" element={<ReportEditorWidget />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

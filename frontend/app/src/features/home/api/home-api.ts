@@ -31,8 +31,8 @@ export const fetchHomeReportsAsync = async (): Promise<readonly HomeReport[]> =>
   );
 };
 
-export const createReportAsync = async (): Promise<string> => {
-  return crypto.randomUUID();
+export const createReportAsync = async (): Promise<void> => {
+  return;
 };
 
 export const deleteReportAsync = async (reportId: string): Promise<void> => {

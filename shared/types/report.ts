@@ -30,6 +30,8 @@ export const GenerateOutlineRequestSchema = z.object({
   overview: z.string().trim().min(1),
   aiMode: AiModeSchema,
   wordCount: WordCountRangeSchema,
+  reference_ids: z.array(z.string().min(1)),
+  overview_reference_id: z.string().min(1).nullable(),
 });
 
 export const GeneratedOutlineSchema = z.object({

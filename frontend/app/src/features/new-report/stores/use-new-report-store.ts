@@ -22,7 +22,6 @@ type HumanizeCheckerState = {
 };
 
 type NewReportState = {
-  readonly reportId: string;
   readonly currentPhase: number;
   readonly completedPhases: readonly number[];
   readonly title: string;
@@ -37,7 +36,7 @@ type NewReportState = {
   readonly enableHumanize: boolean;
   readonly humanizeCheckers: readonly HumanizeCheckerState[];
   readonly actions: {
-    readonly initialize: (reportId: string) => void;
+    readonly initialize: () => void;
     readonly clear: () => void;
     readonly setCurrentPhase: (phase: number) => void;
     readonly setCompletedPhases: (phases: readonly number[]) => void;
@@ -70,8 +69,6 @@ const KEY = {
   wordCount: 'report_word_count',
   aiMode: 'report_model',
   overviewMode: 'report_is_file_upload',
-  uploadedFileName: 'report_uploaded_file_name',
-  uploadedFileSize: 'report_uploaded_file_size',
   title: 'report_title',
   references: 'reference_uploaded_files',
   tone: 'tone_selection',
@@ -88,7 +85,6 @@ const createInitialCheckers = (): readonly HumanizeCheckerState[] => {
 };
 
 const initialState = {
-  reportId: '',
   currentPhase: 1,
   completedPhases: [] as readonly number[],
   title: '新規レポート',
@@ -112,27 +108,6 @@ const safeSessionStorage = () => {
   return window.sessionStorage;
 };
 
-const toNumber = (value: string | null, fallback: number): number => {
-  if (value === null) {
-    return fallback;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-const parseJson = <T>(value: string | null, fallback: T): T => {
-  if (value === null) {
-    return fallback;
-  }
-
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-};
-
 const persistState = (state: NewReportState) => {
   const storage = safeSessionStorage();
 
@@ -151,65 +126,6 @@ const persistState = (state: NewReportState) => {
   storage.setItem(KEY.tone, state.tone);
   storage.setItem(KEY.outline, JSON.stringify(state.outline));
   storage.setItem(KEY.enableHumanize, JSON.stringify(state.enableHumanize));
-
-  if (state.overviewFile === null) {
-    storage.removeItem(KEY.uploadedFileName);
-    storage.removeItem(KEY.uploadedFileSize);
-    return;
-  }
-
-  storage.setItem(KEY.uploadedFileName, state.overviewFile.name);
-  storage.setItem(KEY.uploadedFileSize, String(state.overviewFile.size));
-};
-
-const hydrateState = (reportId: string) => {
-  const storage = safeSessionStorage();
-
-  if (storage === null) {
-    return {
-      ...initialState,
-      reportId,
-    };
-  }
-
-  const overviewMode: OverviewMode =
-    storage.getItem(KEY.overviewMode) === 'true' ? 'file' : 'text';
-  const uploadedFileName = storage.getItem(KEY.uploadedFileName);
-  const uploadedFileSize = toNumber(storage.getItem(KEY.uploadedFileSize), 0);
-  const overviewFile =
-    uploadedFileName === null
-      ? null
-      : {
-        referenceId: `overview-${reportId}`,
-        name: uploadedFileName,
-        size: uploadedFileSize,
-      };
-
-  return {
-    ...initialState,
-    reportId,
-    currentPhase: toNumber(storage.getItem(KEY.currentPhase), 1),
-    completedPhases: parseJson<readonly number[]>(
-      storage.getItem(KEY.completedPhases),
-      [],
-    ),
-    overview: storage.getItem(KEY.overview) ?? '',
-    wordCount: storage.getItem(KEY.wordCount) ?? '1500',
-    aiMode: storage.getItem(KEY.aiMode) ?? 'speed',
-    overviewMode,
-    title: storage.getItem(KEY.title) ?? '新規レポート',
-    uploadedFiles: parseJson<readonly UploadedReference[]>(
-      storage.getItem(KEY.references),
-      [],
-    ),
-    tone: (storage.getItem(KEY.tone) ?? 'desu-masu') as Tone,
-    outline: parseJson<readonly OutlineItem[]>(storage.getItem(KEY.outline), []),
-    enableHumanize: parseJson<boolean>(
-      storage.getItem(KEY.enableHumanize),
-      false,
-    ),
-    overviewFile,
-  };
 };
 
 export const useNewReportStore = create<NewReportState>((set, get) => {
@@ -227,11 +143,13 @@ export const useNewReportStore = create<NewReportState>((set, get) => {
   return {
     ...initialState,
     actions: {
-      initialize: (reportId: string) => {
+      initialize: () => {
         set((state) => {
+          safeSessionStorage()?.clear();
           const next = {
             ...state,
-            ...hydrateState(reportId),
+            ...initialState,
+            actions: state.actions,
           };
           persistState(next);
           return next;

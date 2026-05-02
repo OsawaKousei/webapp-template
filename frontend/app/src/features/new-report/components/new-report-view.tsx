@@ -28,7 +28,6 @@ import type {
 } from '../stores/use-new-report-store';
 
 type NewReportViewProps = {
-  readonly reportId: string;
   readonly title: string;
   readonly phaseCount: number;
   readonly currentPhase: number;
@@ -130,7 +129,6 @@ const HumanizeList = ({
 };
 
 export const NewReportView = ({
-  reportId,
   title,
   phaseCount,
   currentPhase,
@@ -172,7 +170,7 @@ export const NewReportView = ({
         <header className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              New Report / {reportId}
+              New Report
             </p>
             <Input
               value={title}

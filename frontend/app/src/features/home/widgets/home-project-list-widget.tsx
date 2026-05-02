@@ -77,8 +77,8 @@ export const HomeProjectListWidget = () => {
         setErrorMessage(null);
 
         try {
-          const reportId = await createMutation.mutateAsync();
-          navigate(`/new-report/${reportId}`);
+          await createMutation.mutateAsync();
+          navigate('/new-report');
         } catch (error: unknown) {
           const message =
             error instanceof Error

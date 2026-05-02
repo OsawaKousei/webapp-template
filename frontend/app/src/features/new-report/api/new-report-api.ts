@@ -37,12 +37,11 @@ type GenerateOutlineArgs = {
   readonly overview: string;
   readonly wordCount: string;
   readonly aiMode: string;
-  readonly reference: readonly string[];
-  readonly overviewReferenceId: string | null;
+  readonly reference_ids: readonly string[];
+  readonly overview_reference_id: string | null;
 };
 
 type GenerateReportArgs = {
-  readonly reportId: string;
   readonly overview: string;
   readonly title: string;
   readonly outline: ReadonlyArray<{
@@ -70,7 +69,6 @@ const toGenerateReportTone = (tone: string): 'formal' | 'balanced' | 'casual' =>
 };
 
 export const uploadReferenceAsync = async (
-  reportId: string,
   file: File,
 ): Promise<{ referenceId: string; name: string; size: number }> => {
   const response = await uploadFileAsync(
@@ -78,9 +76,6 @@ export const uploadReferenceAsync = async (
       path: '/api/report/upload-file',
       file,
       responseSchema: uploadSchema,
-      formFields: {
-        report_id: reportId,
-      },
     },
   );
 
@@ -113,8 +108,8 @@ export const generateOutlineAsync = async (args: GenerateOutlineArgs) => {
           maxWordCount: Number(args.wordCount),
         },
         aiMode: args.aiMode,
-        reference: args.reference,
-        overviewReferenceId: args.overviewReferenceId,
+        reference_ids: args.reference_ids,
+        overview_reference_id: args.overview_reference_id,
       },
     },
     outlineResponseSchema,
