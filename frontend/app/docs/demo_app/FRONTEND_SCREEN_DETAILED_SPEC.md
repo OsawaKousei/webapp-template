@@ -1,0 +1,660 @@
+# フロントエンド画面詳細仕様書（現行実装準拠）
+
+## 1. 目的
+
+本書は、現行フロントエンド実装を正として、画面単位のUI仕様・操作仕様・状態遷移・API連携仕様を詳細化したものである。
+
+## 2. 対象範囲
+
+本書の対象は、現時点で実装の中心となる以下の画面群。
+
+- Home（プロジェクト一覧）
+- New Report（レポート新規作成ウィザード）
+- Report Editor（レポート編集）
+
+## 3. 共通仕様
+
+### 3.1 認証前提
+
+- Homeは認証必須。`next-auth` のセッション状態を判定し、未認証時は `/login` へ遷移。
+- Report Editor / New Report はURLパラメータ `id`（reportId）前提で動作する。
+
+### 3.2 ステータス表現
+
+- 主な非同期処理は以下で統一。
+- ローディング中: スピナー + 処理中文言。
+- 失敗: コンソールログ出力、必要に応じてUI文言または通知。
+- 成功: 状態更新または遷移を実行。
+
+### 3.3 モーダル方針
+
+- 参考文献追加、検索結果、エクスポート、削除確認などはオーバーレイ表示。
+- 背景クリックや閉じるボタンで閉じる挙動を実装（画面ごとに若干差異あり）。
+
+## 4. Home画面（/home）
+
+### 4.1 画面目的
+
+- ユーザーの既存レポート一覧表示
+- レポート作成開始
+- レポート編集再開
+- レポート削除
+
+### 4.2 初期化フロー
+
+1. `useSession()` でセッション状態取得。
+2. `loading` 中は全画面中央に `Loading...` を表示。
+3. `unauthenticated` の場合 `/login` へ遷移。
+4. `authenticated` かつセッション有効時、`/api/user/home` を呼び出してユーザー情報取得。
+5. 失敗時も `/login` へ遷移。
+
+### 4.3 レイアウト
+
+- ルート: `flex h-screen bg-gray-50 overflow-hidden`
+- 左カラム: サイドバー固定幅 `w-64`
+- 右カラム: メイン領域 `flex-1`
+
+### 4.4 サイドバー仕様
+
+#### 4.4.1 表示項目
+
+- ロゴ（画像 + サービス名）
+- ユーザー名
+- メールアドレス
+- プランバッジ
+- ログアウトボタン
+- 利用可能クレジット数
+- ベータ期間無制限メッセージ
+- 不具合報告・機能リクエストリンク
+- プライバシーポリシー、利用規約、会社情報リンク
+- コピーライト
+
+#### 4.4.2 操作
+
+- ログアウト:
+  - 二重実行防止フラグ `isLoggingOut` を利用。
+  - `signOut({ callbackUrl: "/" })` を実行。
+  - 例外時は `window.location.href = "/"` にフォールバック。
+
+### 4.5 メイン（プロジェクト一覧）仕様
+
+#### 4.5.1 表示要素
+
+- 見出し: 「プロジェクト一覧」
+- 検索入力: プレースホルダ「プロジェクトを検索...」
+- 新規作成ボタン
+- プロジェクトカード一覧（グリッド）
+
+#### 4.5.2 データ取得
+
+- 初回 `useEffect` で `/api/user/user-reports` をGET。
+- 取得結果を `projects` に保持。
+
+#### 4.5.3 検索
+
+- `searchQuery` の部分一致で `title` をフィルタ（大文字小文字を無視）。
+
+#### 4.5.4 新規作成
+
+- ボタン押下時 `/api/report/new` をPOST。
+- 成功時 `reportId` を受け取り `/new-report/{reportId}` へ遷移。
+- 失敗時はエラーメッセージ表示。
+
+#### 4.5.5 カード操作
+
+- 編集: カードクリックまたは「編集する」で `/report/{id}` へ遷移。
+- 削除: ゴミ箱ボタン押下で削除確認モーダルを開く。
+
+#### 4.5.6 削除確認モーダル
+
+- 表示内容:
+  - タイトル「レポートの削除確認」
+  - 対象レポート名
+  - 「この操作は取り消すことができません」注意文
+- ボタン:
+  - キャンセル
+  - 削除する（処理中は「削除中...」）
+- 実行:
+  - `/api/report?reportId={id}` をDELETE。
+  - 成功時は一覧再取得。
+
+#### 4.5.7 表示状態
+
+- `loading`: 「読み込み中...」
+- `error`: 赤字でエラー文言
+- 空状態:
+  - 検索あり: 該当なしメッセージ
+  - 検索なし: 未作成メッセージ
+
+## 5. New Report画面（/new-report/[id]）
+
+### 5.1 画面目的
+
+- レポート生成前の入力収集
+- AIによる目次生成
+- AIによる本文生成
+- オプションでHumanizeチェック
+
+### 5.2 全体構成
+
+- ヘッダー: 戻る、タイトル、キャンセル
+- フェーズインジケータ
+- フェーズ別フォーム
+- 下部ナビゲーション（前へ/次へ/生成）
+
+### 5.3 フェーズ一覧
+
+- humanize無効時: 1〜4
+- humanize有効時: 1〜5
+
+1. 概要
+2. 参考資料
+3. 口調
+4. 目次
+5. 人間らしさチェック（条件付き）
+
+### 5.4 進行制御（canProceedToNext）
+
+- Phase1:
+  - テキストモード: `overview.trim() !== ""`
+  - ファイルモード: `overviewFile !== null`
+- Phase2: 常にtrue（任意）
+- Phase3: `selectedTone !== ""`
+- Phase4: `outline.length > 0`
+- Phase5: 常にtrue
+
+### 5.5 sessionStorage永続化
+
+#### 5.5.1 フェーズ制御
+
+- `report_current_phase`
+- `report_completed_phases`
+
+#### 5.5.2 概要関連
+
+- `report_text_overview`
+- `report_file_overview`
+- `report_word_count`
+- `report_model`
+- `report_is_file_upload`
+- `report_uploaded_file_name`
+- `report_uploaded_file_size`
+- `report_title`
+
+#### 5.5.3 参考資料関連
+
+- `reference_uploaded_files`
+- `reference_ai_search_expanded`
+- `reference_search_type`
+- `reference_count`
+- `reference_auto_create_bibliography`
+
+#### 5.5.4 口調/目次/Humanize関連
+
+- `tone_selection`
+- `outline_items`
+- `enable_humanize`
+
+### 5.6 フェーズ1: 概要
+
+#### 5.6.1 入力モード
+
+- チェックボックスで切替:
+  - OFF: テキスト概要入力
+  - ON: 課題ファイルアップロード
+
+#### 5.6.2 テキスト入力
+
+- textarea（必須）
+- ヘルプ文: 詳細に書くほど生成精度向上
+
+#### 5.6.3 ファイル入力
+
+- `react-dropzone` を使用
+- 受理拡張子: `.pdf .doc .docx .txt`
+- サイズ上限: `DEFAULT_SINGLE_FILE_UPLOAD_OPTIONS.maxSizeBytes`
+- API実行: `uploadFile(file, reportId, DEFAULT_SINGLE_FILE_UPLOAD_OPTIONS)`
+- 成功時:
+  - `overviewFile` 設定
+  - file関連キーを保存
+- 削除時:
+  - `/api/report/reference?referenceId={id}` をDELETE
+  - UIから除去し保存情報もクリア
+
+#### 5.6.4 付随入力
+
+- 文字数セレクト（`wordCountOptions`）
+- モデルセレクト（`aiModes`）
+
+### 5.7 フェーズ2: 参考資料
+
+#### 5.7.1 ファイルアップロード
+
+- DnD領域 + ファイル選択ボタン
+- 受理拡張子: `.pdf .doc .docx .ppt .pptx .txt`
+- 複数ファイル対応
+- API実行: `uploadFile` をファイルごとに順次実行
+- 成功分を `uploadedFiles` に追加保存
+
+#### 5.7.2 URL追加（現状）
+
+- UIは存在するが無効化（近日登場）。
+
+#### 5.7.3 AI検索（現状）
+
+- 折りたたみUI/設定項目は実装済み。
+- ボタン全体は無効化（近日登場）。
+
+#### 5.7.4 参考資料削除
+
+- `/api/report/reference?referenceId={id}` をDELETE。
+- UI一覧から除去。
+
+#### 5.7.5 自動参考文献作成
+
+- チェックボックスUIあり、無効化（近日登場）。
+
+### 5.8 フェーズ3: 口調
+
+- 選択肢:
+  - です・ます調
+  - である・だ調
+  - ユーザーの口調に合せる（無効化、近日登場）
+- 初期値:
+  - `tone_selection` が無ければ `desu-masu` を保存して適用
+
+### 5.9 フェーズ3完了時の目次生成
+
+- ボタン: 「AIで目次を作成」
+- API: `/api/ai/outline` POST
+- リクエスト:
+  - `overview`
+  - `wordCount`
+  - `aiMode`
+  - `reference`
+  - `overviewReferenceId`（ファイルモード時）
+- 成功時:
+  - `outline` をAPI結果で更新
+  - `report_title` を保存
+- 失敗時:
+  - 既定目次のまま次フェーズへ進行
+
+### 5.10 フェーズ4: 目次
+
+#### 5.10.1 レポートタイトル編集
+
+- タイトル表示部に編集ボタン
+- 入力 + 保存/キャンセル
+- `report_title` に保存
+
+#### 5.10.2 目次項目編集
+
+- 各章項目に以下を表示:
+  - 章番号
+  - タイトル
+  - 概要
+- 操作:
+  - 編集（タイトル/概要）
+  - 削除
+  - 章追加
+  - 上下移動
+  - ドラッグ&ドロップ並び替え
+
+#### 5.10.3 Humanizeオプション
+
+- 「人間らしいレポートに調整する」チェック
+- `enable_humanize` に保存
+
+### 5.11 レポート生成
+
+- ボタン: 「AIでレポートを生成」
+- API: `/api/ai/report` POST
+- リクエスト構成:
+  - `reportId`
+  - `overview`
+  - `title`
+  - `outline`
+  - `wordCount`
+  - `aiMode`
+  - `tone`
+  - `reference`
+  - `humanize`
+- 成功時:
+  - humanize有効: Phase5へ
+  - humanize無効: sessionStorage全消去後 `/report/{id}` へ
+- 失敗時:
+  - sessionStorage全消去後 `/home` へ
+
+### 5.12 フェーズ5: Humanizeチェック
+
+- `humanizeCheckers` を順番に処理
+- 各チェッカーごとに:
+  - checking中表示
+  - success/fail表示
+- API: `/api/report/humanize` POST
+- 全完了後:
+  - 完了メッセージ表示
+  - 2秒後に `onComplete()` 実行し `/report/{id}` へ
+
+### 5.13 ナビゲーション
+
+- 前へ:
+  - Phase1とPhase5では無効
+- 次へ:
+  - Phase1〜3で表示
+  - Phase3のみ押下処理が目次生成API
+- 生成:
+  - Phase4で表示
+- キャンセル:
+  - sessionStorage全消去 + `/home` へ
+
+## 6. Report Editor画面（/report/[id]）
+
+### 6.1 画面目的
+
+- レポート本文の編集
+- 参考文献管理
+- 引用生成と挿入
+- AIチャット補助
+- 参考文献検索
+- 保存/エクスポート
+
+### 6.2 初期化
+
+- 並列取得:
+  - `/api/user/home`
+  - `/api/report?reportId={id}`
+- レポート取得成功時:
+  - `content`, `title`, `lastModified`, `references`, `quotes` を反映
+  - 本文から文字数/語数を計算
+- ローディング中は全画面ローダー
+- 初期化完了後に変更検知を有効化
+
+### 6.3 全体レイアウト
+
+- ヘッダー固定 + 下部メイン領域
+- メイン領域は水平分割（`react-resizable-panels`）
+  - 左: エディター（default 66%, min 30%）
+  - 右: 補助パネル（default 34%, min 25%）
+- 右側は垂直分割
+  - 上: 参考文献（default 35%, min 20%）
+  - 中: AIチャット（default 40%, min 20%）
+  - 下: 引用（default 25%, min 15%）
+
+### 6.4 ヘッダー仕様
+
+#### 6.4.1 左領域
+
+- レポートタイトル（クリックでインライン編集）
+- ユーザー情報（アイコン、ユーザー名）
+- クレジット表示
+
+#### 6.4.2 中央領域
+
+- AIモード切替ドロップダウン（`aiModes`）
+- 文字数/語数表示
+- 保存状態表示:
+  - saved
+  - saving
+  - unsaved
+- 最終保存日時表示（`YYYY-MM-DD HH:mm:ss`）
+
+#### 6.4.3 右領域
+
+- フィードバックリンク（外部フォーム）
+- ホーム遷移ボタン
+- 保存ボタン
+- エクスポートボタン
+
+### 6.5 保存仕様
+
+- POST `/api/report`
+- 送信データ:
+  - id, title, content, wordCount, characterCount, lastModified, references, quotes
+- 成功時:
+  - `saveStatus = saved`
+  - `lastSaved` をレスポンス値で更新
+- 失敗時:
+  - `saveStatus = unsaved`
+
+### 6.6 変更検知
+
+- 本文/タイトル/参考文献/引用更新で未保存化。
+- 本文はJSON比較して実質差分がある場合のみ更新処理。
+
+### 6.7 エディター仕様（左パネル）
+
+#### 6.7.1 技術構成
+
+- Tiptap (`StarterKit`, `Underline`)
+- Novelの `EditorRoot`
+- BubbleMenu, SlashCommand
+
+#### 6.7.2 公開メソッド（親から呼び出し）
+
+- `getContent()`
+- `setContent(content)`
+- `insertText(text)`
+- `insertTextAtEnd(text)`
+
+#### 6.7.3 フローティング操作（選択時）
+
+- 太字 / 斜体 / 下線
+- 「AIで編集」
+  - 長くする
+  - 短くする
+  - 言い換える
+  - 続きを書く
+  - です・ます調
+  - である・だ調
+  - 文章改善
+- 「参考文献を探す」
+  - 選択テキストを検索語としてモーダル検索
+
+#### 6.7.4 AI編集API
+
+- POST `/api/ai/editor`
+- リクエスト: `aiMode`, `aiAction`, `content`
+- `continue` は選択末尾に挿入、それ以外は選択置換
+
+#### 6.7.5 スラッシュコマンド
+
+- `/` で候補メニュー表示（カテゴリ順表示）
+- 項目:
+  - テキスト
+  - 見出し1/2/3
+  - バレットリスト
+  - ナンバードリスト
+- キー操作:
+  - `ArrowUp/Down`
+  - `Enter` 決定
+
+### 6.8 参考文献パネル（右上）
+
+#### 6.8.1 表示
+
+- ヘッダー「参考文献」
+- 追加ボタン
+- 参考文献リスト
+
+#### 6.8.2 追加モーダル
+
+- タブ: ファイル / URL
+- ファイル:
+  - DnD + クリック選択
+  - 許可: PDF, DOC, DOCX, TXT
+  - 上限: 10MB
+- URL:
+  - URL入力（必須）
+  - タイトル入力（任意）
+
+#### 6.8.3 追加時処理
+
+- ファイル: `uploadFile` 実行後、成功データを referenceとして追加
+- URL: クライアント側で referenceオブジェクトを生成して追加
+
+#### 6.8.4 削除
+
+- 親の `onRemoveReference` を介して reference削除
+- 併せて対応quoteを除去
+
+### 6.9 AIチャットパネル（右中）
+
+#### 6.9.1 初期状態
+
+- 初回AI歓迎メッセージを1件表示
+
+#### 6.9.2 操作
+
+- テキストエリア（Enter送信 / Shift+Enter改行）
+- 送信ボタン
+- モード選択ドロップダウン（chatModes）
+
+#### 6.9.3 API
+
+- POST `/api/ai/chat`
+- リクエスト:
+  - `aiMode`
+  - `chatMode`
+  - `message`
+  - `history`
+
+#### 6.9.4 エラー時
+
+- チャット欄へエラーメッセージ追加
+- 通知モーダル（error）を表示
+
+### 6.10 引用パネル（右下）
+
+#### 6.10.1 表示
+
+- 形式選択（APA/MLA/Chicago/Harvard）
+- 「挿入」ボタン（参考文献一覧を本文末尾に挿入）
+- 「コピー」ボタン（全引用を整形してクリップボードへ）
+- 「新しい引用を追加」ボタン
+- 引用カードリスト
+
+#### 6.10.2 引用カード操作
+
+- 編集
+- 削除
+- 個別挿入（本文末尾へ1件挿入）
+
+#### 6.10.3 新規追加/編集モーダル
+
+- `ReferenceFormModal` を使用
+- Add/Editモードを持つ
+
+### 6.11 参考文献検索モーダル
+
+#### 6.11.1 起動
+
+- エディター選択テキストから起動
+- `searchModal` stateで表示制御
+
+#### 6.11.2 API
+
+- POST `/api/ai/reference_search`
+- リクエスト: `query`, `aiMode`
+
+#### 6.11.3 表示
+
+- 検索語表示
+- 結果カード（タイプ、タイトル、著者、年、抄録等）
+
+#### 6.11.4 アクション
+
+- 引用に追加
+- 間接引用を挿入
+  - 例: `(Author, Year)` を本文挿入
+  - 同時に引用一覧に追加
+- 直接引用を挿入
+  - 現在は未実装通知のみ
+
+### 6.12 サイドツールパネル（左端）
+
+#### 6.12.1 開閉
+
+- 閉時: 左端フローティングトリガー表示
+- 開時: 幅 `w-80` のツール一覧
+
+#### 6.12.2 ツールカテゴリ
+
+- 口調
+- 校正
+- 執筆支援
+
+#### 6.12.3 現状
+
+- 項目はUI表示中心で、選択時はログ出力のみ（本実装未接続）
+- 「近日登場...」表示あり
+- フッターにホーム遷移ボタン
+
+### 6.13 エクスポートモーダル
+
+#### 6.13.1 形式
+
+- PDF（無効化、近日登場）
+- Word（無効化、近日登場）
+- TXT（有効）
+- HTML（有効）
+
+#### 6.13.2 オプション
+
+- 表紙を含める
+- フォントサイズ（pdf/docx時）
+- ページ余白（pdf/docx時）
+
+#### 6.13.3 実行
+
+- POST `/api/export`
+- PDF時: Blobダウンロード
+- それ以外: Base64デコード後ダウンロード
+
+## 7. API連携一覧（画面起点）
+
+### 7.1 Home
+
+- GET `/api/user/home`
+- GET `/api/user/user-reports`
+- POST `/api/report/new`
+- DELETE `/api/report?reportId={id}`
+
+### 7.2 New Report
+
+- POST `/api/report/reference`（uploadFile経由）
+- DELETE `/api/report/reference?referenceId={id}`
+- POST `/api/ai/outline`
+- POST `/api/ai/report`
+- POST `/api/report/humanize`
+
+### 7.3 Report Editor
+
+- GET `/api/user/home`
+- GET `/api/report?reportId={id}`
+- POST `/api/report`
+- POST `/api/ai/editor`
+- POST `/api/ai/reference_search`
+- POST `/api/ai/chat`
+- POST `/api/export`
+
+## 8. 実装上の注意点（現行仕様）
+
+- New ReportはsessionStorage依存が強く、画面離脱やモード切替時のキー削除を前提とする。
+- Report Editorの保存は手動トリガーであり、自動保存は実装されていない。
+- サイドツール、URL追加の一部、AI参考文献探索の一部はUI先行実装（未有効）。
+- 直接引用挿入は未実装で、通知のみ返す。
+
+## 9. 受け入れ確認チェックリスト
+
+- Homeで未認証時にログイン画面へ遷移する。
+- Homeで新規作成後に `new-report/{id}` へ遷移する。
+- New Reportでフェーズ進行制御が条件通りに働く。
+- New Reportでリロード後にphase/入力値が復元される。
+- New Reportでレポート生成成功時に期待通り遷移する。
+- Report Editorで取得済みレポートが表示される。
+- Report Editorで本文編集後に未保存状態へ変化する。
+- Report Editorで保存成功時に保存済み表示へ戻る。
+- 参考文献検索モーダルから間接引用を本文へ挿入できる。
+- 引用パネルで全引用コピー・挿入が機能する。
+- エクスポートモーダルでTXT/HTMLの出力が実行できる。
