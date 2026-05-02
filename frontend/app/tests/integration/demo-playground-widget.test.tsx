@@ -14,14 +14,14 @@ describe('DemoPlaygroundWidget', () => {
 
     render(<DemoPlaygroundWidget />);
 
-    expect(screen.getByText('Counter')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
-    expect(screen.getByText('Result: 12 / 3 = 4.00')).toBeInTheDocument();
+    expect(screen.getByText('Counter')).toBeTruthy();
+    expect(screen.getByText('12')).toBeTruthy();
+    expect(screen.getByText('Result: 12 / 3 = 4.00')).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Increment' }));
 
-    expect(screen.getByText('13')).toBeInTheDocument();
-    expect(screen.getByText('Result: 13 / 3 = 4.33')).toBeInTheDocument();
+    expect(screen.getByText('13')).toBeTruthy();
+    expect(screen.getByText('Result: 13 / 3 = 4.33')).toBeTruthy();
   });
 
   it('shows invalid state and then recovers with valid denominator', async () => {
@@ -38,12 +38,12 @@ describe('DemoPlaygroundWidget', () => {
 
     expect(
       screen.getByText('Denominator must be an integer between 1 and 1000'),
-    ).toBeInTheDocument();
+    ).toBeTruthy();
 
     await user.clear(denominatorInput);
     await user.type(denominatorInput, '5');
 
-    expect(screen.getByText('Applied denominator 5')).toBeInTheDocument();
-    expect(screen.getByText('Result: 12 / 5 = 2.40')).toBeInTheDocument();
+    expect(screen.getByText('Applied denominator 5')).toBeTruthy();
+    expect(screen.getByText('Result: 12 / 5 = 2.40')).toBeTruthy();
   });
 });

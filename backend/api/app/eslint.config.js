@@ -6,13 +6,7 @@ import tseslint from 'typescript-eslint';
 export default [
   {
     ignores: [
-      '**/components/ui/**', // shadcn/ui のコンポーネントディレクトリ
-      '**/lib/utils.ts', // shadcn/ui でよく使われる utils (cn関数等)
-      '**/.next/**', // Next.jsのビルド生成物
       '**/dist/**', // 一般的なビルド生成物
-      '**/playwright/**', // PlaywrightのCT用ファイル
-      '**/playwright-report/**', // Playwrightのレポート
-      '**/test-results/**', // Playwrightのテスト結果
     ],
   },
   ...tseslint.configs.strict,

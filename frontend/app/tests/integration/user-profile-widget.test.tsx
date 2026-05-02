@@ -51,9 +51,9 @@ describe('UserProfileWidget', () => {
 
     renderWithQueryClient();
 
-    expect(await screen.findByText('Hanako')).toBeInTheDocument();
-    expect(screen.getByText('hanako@example.com')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
+    expect(await screen.findByText('Hanako')).toBeTruthy();
+    expect(screen.getByText('hanako@example.com')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeTruthy();
   });
 
   it('shows error and retries successfully', async () => {
@@ -78,7 +78,7 @@ describe('UserProfileWidget', () => {
 
     expect(
       await screen.findByText('Failed to fetch user profile'),
-    ).toBeInTheDocument();
+    ).toBeTruthy();
 
     shouldFail = false;
 
@@ -86,7 +86,7 @@ describe('UserProfileWidget', () => {
     await user.click(screen.getByRole('button', { name: 'Retry Fetch' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Taro')).toBeInTheDocument();
+      expect(screen.getByText('Taro')).toBeTruthy();
     });
   });
 });
