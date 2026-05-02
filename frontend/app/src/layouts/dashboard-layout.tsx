@@ -1,4 +1,5 @@
 import { UserProfileWidget } from '../features/user-profile';
+import { DemoPlaygroundWidget } from '../features/demo-playground';
 
 export const DashboardLayout = () => {
   return (
@@ -20,6 +21,7 @@ export const DashboardLayout = () => {
 
         <main className="grid gap-6 lg:grid-cols-2">
           <UserProfileWidget />
+          <DemoPlaygroundWidget />
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-card-foreground">
@@ -30,6 +32,10 @@ export const DashboardLayout = () => {
               <li>UI states are modeled with discriminated unions.</li>
               <li>Pure View has no external dependency and no side effects.</li>
               <li>Tailwind semantic tokens are used for all visual roles.</li>
+              <li>
+                Demo uses react-query, zustand, zod, ts-pattern, neverthrow and
+                date-fns.
+              </li>
             </ul>
           </section>
         </main>
