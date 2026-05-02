@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { LoginView } from '@/features/login/components/login-view';
 import { NewReportLayout } from '@/features/new-report/layouts/new-report-layout';
-import { HomeLayout } from '@/layouts/home-layout';
+import { HomeLayout } from '@/features/home/layouts/home-layout';
 import { ReportEditorWidget } from '@/features/report-editor';
 
 const LoginRoute = () => {

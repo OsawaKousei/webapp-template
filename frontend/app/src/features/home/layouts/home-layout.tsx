@@ -1,6 +1,6 @@
+import { HomeHeader } from '@/features/home/components/home-header';
 import { HomeProjectListWidget } from '@/features/home/widgets/home-project-list-widget';
 import { HomeSidePanelWidget } from '@/features/home/widgets/home-side-panel-widget';
-import { HomeHeader } from '@/features/home/components/home-header';
 
 export const HomeLayout = () => {
   return (
