@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-export const UserStatusSchema = z.union([z.literal('active'), z.literal('inactive')]);
+export const UserStatusSchema = z.union([
+  z.literal('active'),
+  z.literal('inactive'),
+]);
 
 export const UserSchema = z.object({
   id: z.string().min(1),

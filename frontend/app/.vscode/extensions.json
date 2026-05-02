@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "oderwat.indent-rainbow",
+    "usernamehw.errorlens",
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "dbaeumer.vscode-eslint"
+  ]
+}

@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react'
-import './App.css'
-import type { User } from '@my-app/types'
+import { useState, useEffect } from 'react';
+import './App.css';
+import type { User } from '@my-app/types';
 
-function App() {
-  const [user, setUser] = useState<User | null>(null)
+const App = () => {
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     fetch('http://localhost:3000/api/user')
-      .then(res => res.json())
-      .then((data: User) => setUser(data))
-  }, [])
+      .then((res) => res.json())
+      .then((data: User) => setUser(data));
+  }, []);
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -19,13 +19,15 @@ function App() {
           <li>ID: {user.id}</li>
           <li>名前: {user.name}</li>
           <li>Email: {user.email}</li>
-          <li>Status: <strong>{user.status}</strong></li>
+          <li>
+            Status: <strong>{user.status}</strong>
+          </li>
         </ul>
       ) : (
         <p>読み込み中...</p>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
