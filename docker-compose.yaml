@@ -10,7 +10,7 @@ services:
     user: "node"
     volumes:
       - ./frontend/app:/home/node/app
-      - ./shared/types:/home/node/app/shared/types
+      - ./shared:/home/node/app/shared
       - frontend-node-modules:/home/node/app/node_modules
     ports:
       - "5173:5173"
@@ -23,7 +23,7 @@ services:
     stdin_open: true
     volumes:
       - ./frontend/app:/app
-      - ./shared/types:/app/shared/types
+      - ./shared:/app/shared
       - /app/node_modules
     depends_on:
       - frontend
@@ -35,7 +35,7 @@ services:
     user: "node"
     volumes:
       - ./backend/api/app:/home/node/app
-      - ./shared/types:/home/node/app/shared/types
+      - ./shared:/home/node/app/shared
       - api-node-modules:/home/node/app/node_modules
     ports:
       - "3000:3000"
