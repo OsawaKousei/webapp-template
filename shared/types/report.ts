@@ -14,15 +14,6 @@ export const OutlineItemSchema = z.object({
   order: z.number().int().min(1),
 });
 
-export const OutlineSchema = z.object({
-  userId: z.string().min(1),
-  overview: z.string().trim().min(1),
-  title: z.string().trim().min(1),
-  items: z.array(OutlineItemSchema).min(1),
-  createdAt: z.string().min(1),
-  updatedAt: z.string().min(1),
-});
-
 export const AiModeSchema = z.union([z.literal('speed'), z.literal('turbo')]);
 
 export const WordCountRangeSchema = z
@@ -39,7 +30,6 @@ export const GenerateOutlineRequestSchema = z.object({
   overview: z.string().trim().min(1),
   aiMode: AiModeSchema,
   wordCount: WordCountRangeSchema,
-  overwriteExisting: z.boolean().optional(),
 });
 
 export const GeneratedOutlineSchema = z.object({
@@ -58,6 +48,7 @@ export const GenerateReportToneSchema = z.union([
 ]);
 
 export const GenerateReportRequestSchema = z.object({
+  overview: z.string().trim().min(1),
   tone: GenerateReportToneSchema,
 });
 
@@ -114,13 +105,8 @@ export const SaveReportRequestSchema = z.object({
   references: z.array(ReferenceSchema).optional().default([]),
 });
 
-export const DeleteOutlineResponseSchema = z.object({
-  success: z.literal(true),
-});
-
 export type ReportSummary = z.infer<typeof ReportSummarySchema>;
 export type OutlineItem = z.infer<typeof OutlineItemSchema>;
-export type Outline = z.infer<typeof OutlineSchema>;
 export type AiMode = z.infer<typeof AiModeSchema>;
 export type WordCountRange = z.infer<typeof WordCountRangeSchema>;
 export type GenerateOutlineRequest = z.infer<

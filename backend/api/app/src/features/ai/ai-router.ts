@@ -35,14 +35,6 @@ const generateOutlineRoute = createRoute({
         },
       },
     },
-    409: {
-      description: 'Conflict',
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
     500: {
       description: 'Internal Server Error',
       content: {
@@ -75,14 +67,6 @@ const generateReportRoute = createRoute({
         },
       },
     },
-    404: {
-      description: 'Not Found',
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
     500: {
       description: 'Internal Server Error',
       content: {
@@ -101,22 +85,13 @@ export const createAiRouter = ({
 
   aiRouter.openapi(generateOutlineRoute, async (context) => {
     const request = context.req.valid('json');
-    const outlineResult = await generateOutline({
-      reportRepository,
-      request,
-    });
+    const outlineResult = await generateOutline({ request });
 
     return match(outlineResult)
       .when(
         (result) => result.isOk(),
         (result) => {
           return context.json(result.value, 200);
-        },
-      )
-      .when(
-        (result) => result.isErr() && result.error.type === 'CONFLICT',
-        (result) => {
-          return context.json({ error: result.error.message }, 409);
         },
       )
       .otherwise((result) => {
@@ -140,12 +115,6 @@ export const createAiRouter = ({
         (result) => result.isOk(),
         (result) => {
           return context.json(result.value, 200);
-        },
-      )
-      .when(
-        (result) => result.isErr() && result.error.type === 'NOT_FOUND',
-        (result) => {
-          return context.json({ error: result.error.message }, 404);
         },
       )
       .otherwise((result) => {

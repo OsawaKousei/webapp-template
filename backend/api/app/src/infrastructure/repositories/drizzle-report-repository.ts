@@ -2,22 +2,16 @@ import { and, asc, eq } from 'drizzle-orm';
 import { err, ok, type Result } from 'neverthrow';
 import type { DatabaseClient } from '../db/client';
 import {
-  outlineItems,
-  outlines,
   quotes,
   reportReferences,
   reports,
 } from '../db/schema';
 import type {
-  DeleteOutlineByUserIdInput,
-  FindOutlineByUserIdInput,
   FindReportByIdInput,
   ReportRepository,
-  SaveOutlineByUserIdInput,
   SaveReportByIdInput,
 } from '@/src/features/report/report-repo';
 import type {
-  Outline,
   Reference,
   Report,
 } from '@/src/features/report/report-domain';
@@ -46,13 +40,6 @@ const toQuoteReferenceType = (
 
 type CreateDrizzleReportRepositoryInput = {
   readonly db: DatabaseClient;
-};
-
-const cloneOutline = (outline: Outline): Outline => {
-  return {
-    ...outline,
-    items: [...outline.items],
-  };
 };
 
 const cloneReferences = (references: readonly Reference[]): Reference[] => {
@@ -92,101 +79,6 @@ const withInternalServerError = (message: string): Result<never, AppError> => {
 export const createDrizzleReportRepository = ({
   db,
 }: CreateDrizzleReportRepositoryInput): ReportRepository => {
-  const findOutlineByUserId = async ({
-    userId,
-  }: FindOutlineByUserIdInput): Promise<Result<Outline | null, AppError>> => {
-    try {
-      const outlineRows = await db
-        .select()
-        .from(outlines)
-        .where(eq(outlines.userId, userId))
-        .limit(1);
-      const outlineRow = outlineRows[0];
-
-      if (outlineRow === undefined) {
-        return ok(null);
-      }
-
-      const itemRows = await db
-        .select()
-        .from(outlineItems)
-        .where(eq(outlineItems.userId, userId))
-        .orderBy(asc(outlineItems.itemOrder));
-
-      const outline: Outline = {
-        userId: outlineRow.userId,
-        overview: outlineRow.overview,
-        title: outlineRow.title,
-        items: itemRows.map((item) => {
-          return {
-            title: item.title,
-            summary: item.summary,
-            order: item.itemOrder,
-          };
-        }),
-        createdAt: toIsoString(outlineRow.createdAt),
-        updatedAt: toIsoString(outlineRow.updatedAt),
-      };
-
-      return ok(cloneOutline(outline));
-    } catch {
-      return withInternalServerError('Failed to find outline');
-    }
-  };
-
-  const saveOutlineByUserId = async ({
-    userId,
-    outline,
-  }: SaveOutlineByUserIdInput): Promise<Result<Outline, AppError>> => {
-    try {
-      await db
-        .insert(outlines)
-        .values({
-          userId,
-          overview: outline.overview,
-          title: outline.title,
-          createdAt: new Date(outline.createdAt),
-          updatedAt: new Date(outline.updatedAt),
-        })
-        .onConflictDoUpdate({
-          target: outlines.userId,
-          set: {
-            overview: outline.overview,
-            title: outline.title,
-            updatedAt: new Date(outline.updatedAt),
-          },
-        });
-
-      await db.delete(outlineItems).where(eq(outlineItems.userId, userId));
-
-      await Promise.all(
-        outline.items.map((item) => {
-          return db.insert(outlineItems).values({
-            userId,
-            itemOrder: item.order,
-            title: item.title,
-            summary: item.summary,
-          });
-        }),
-      );
-
-      return ok(cloneOutline(outline));
-    } catch {
-      return withInternalServerError('Failed to save outline');
-    }
-  };
-
-  const deleteOutlineByUserId = async ({
-    userId,
-  }: DeleteOutlineByUserIdInput): Promise<Result<true, AppError>> => {
-    try {
-      await db.delete(outlines).where(eq(outlines.userId, userId));
-      return ok(true);
-    } catch {
-      return withInternalServerError('Failed to delete outline');
-    }
-  };
-
   const findReportReferences = async ({
     reportId,
   }: {
@@ -393,9 +285,6 @@ export const createDrizzleReportRepository = ({
   };
 
   return {
-    findOutlineByUserId,
-    saveOutlineByUserId,
-    deleteOutlineByUserId,
     findReportById,
     saveReportById,
   };

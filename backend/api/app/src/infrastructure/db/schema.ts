@@ -41,35 +41,6 @@ export const reports = pgTable('reports', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
 });
 
-export const outlines = pgTable('outlines', {
-  userId: uuid('user_id')
-    .primaryKey()
-    .references(() => users.userId, { onDelete: 'cascade' }),
-  overview: text('overview').notNull(),
-  title: text('title').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
-});
-
-export const outlineItems = pgTable(
-  'outline_items',
-  {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => outlines.userId, { onDelete: 'cascade' }),
-    itemOrder: integer('item_order').notNull(),
-    title: text('title').notNull(),
-    summary: text('summary').notNull(),
-  },
-  (table) => {
-    return [
-      unique('outline_items_user_order_unique').on(table.userId, table.itemOrder),
-      check('outline_items_item_order_check', sql`${table.itemOrder} >= 1`),
-    ];
-  },
-);
-
 export const userAuthIdentities = pgTable(
   'user_auth_identities',
   {

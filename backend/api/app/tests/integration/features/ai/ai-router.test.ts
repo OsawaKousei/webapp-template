@@ -54,32 +54,15 @@ describe('POST /api/ai/generate-outline', () => {
     expect(parsed.success).toBe(true);
   });
 
-  test('409: 既存outlineありで overwriteExisting 未指定は conflict', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '既存概要',
-          title: '既存タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '既存',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
-        },
-      },
-    });
+  test('200: 同じ入力で連続生成しても成功する', async () => {
+    const reportRepository = createFakeReportRepository();
     const app = createApp({
       logger,
       reportRepository,
       userRepository,
     });
 
-    const response = await app.request('/api/ai/generate-outline', {
+    const first = await app.request('/api/ai/generate-outline', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -94,54 +77,23 @@ describe('POST /api/ai/generate-outline', () => {
       }),
     });
 
-    expect(response.status).toBe(409);
-    const json = await response.json();
-
-    expect(json).toEqual({ error: 'Outline already exists' });
-  });
-
-  test('200: 既存outlineありでも overwriteExisting=true なら上書きできる', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '既存概要',
-          title: '既存タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '既存',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
-        },
-      },
-    });
-    const app = createApp({
-      logger,
-      reportRepository,
-      userRepository,
-    });
-
-    const response = await app.request('/api/ai/generate-outline', {
+    const second = await app.request('/api/ai/generate-outline', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        overview: '上書き概要',
+        overview: '新しい概要',
         aiMode: 'turbo',
         wordCount: {
           minWordCount: 1000,
           maxWordCount: 2000,
         },
-        overwriteExisting: true,
       }),
     });
 
-    expect(response.status).toBe(200);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
   });
 
   test('400: overview が空白のみならバリデーションエラー', async () => {
@@ -172,25 +124,8 @@ describe('POST /api/ai/generate-outline', () => {
 });
 
 describe('POST /api/ai/generate-report', () => {
-  test('200: outline から本文を生成できる', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '概要',
-          title: 'タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '要点',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
-        },
-      },
-    });
+  test('200: overview から本文を生成できる', async () => {
+    const reportRepository = createFakeReportRepository();
     const app = createApp({
       logger,
       reportRepository,
@@ -203,6 +138,7 @@ describe('POST /api/ai/generate-report', () => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
+        overview: '概要',
         tone: 'balanced',
       }),
     });
@@ -215,24 +151,7 @@ describe('POST /api/ai/generate-report', () => {
   });
 
   test('200: 生成後に GET /api/reports/{reportId} で本文を取得できる', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '概要',
-          title: 'タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '要点',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
-        },
-      },
-    });
+    const reportRepository = createFakeReportRepository();
     const app = createApp({
       logger,
       reportRepository,
@@ -245,6 +164,7 @@ describe('POST /api/ai/generate-report', () => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
+        overview: '概要',
         tone: 'balanced',
       }),
     });
@@ -275,33 +195,11 @@ describe('POST /api/ai/generate-report', () => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
+        overview: '概要',
         tone: 'invalid',
       }),
     });
 
     expect(response.status).toBe(400);
-  });
-
-  test('404: outline がない場合は not found', async () => {
-    const reportRepository = createFakeReportRepository();
-    const app = createApp({
-      logger,
-      reportRepository,
-      userRepository,
-    });
-
-    const response = await app.request('/api/ai/generate-report', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        tone: 'formal',
-      }),
-    });
-
-    expect(response.status).toBe(404);
-    const json = await response.json();
-    expect(json).toEqual({ error: 'Outline not found' });
   });
 });

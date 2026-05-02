@@ -31,21 +31,6 @@ export const ReferenceSchema = z.object({
   object_url: z.string().optional(),
 });
 
-export const OutlineItemSchema = z.object({
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  order: z.number().int().min(1),
-});
-
-export const OutlineSchema = z.object({
-  userId: z.string().min(1),
-  overview: z.string().trim().min(1),
-  title: z.string().trim().min(1),
-  items: z.array(OutlineItemSchema).min(1),
-  createdAt: z.string().min(1),
-  updatedAt: z.string().min(1),
-});
-
 export const ReportSchema = z.object({
   reportId: z.string().min(1),
   userId: z.string().min(1),
@@ -65,7 +50,5 @@ export const SaveReportCommandSchema = z.object({
 export type QuoteReferenceType = z.infer<typeof QuoteReferenceTypeSchema>;
 export type Quote = z.infer<typeof QuoteSchema>;
 export type Reference = z.infer<typeof ReferenceSchema>;
-export type OutlineItem = z.infer<typeof OutlineItemSchema>;
-export type Outline = z.infer<typeof OutlineSchema>;
 export type Report = z.infer<typeof ReportSchema>;
 export type SaveReportCommand = z.infer<typeof SaveReportCommandSchema>;

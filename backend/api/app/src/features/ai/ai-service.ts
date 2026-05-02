@@ -1,12 +1,9 @@
 import { err, ok, type Result } from 'neverthrow';
 import {
-  createConflictError,
-  createNotFoundError,
   type AppError,
 } from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from '../report/report-repo';
-import type { Outline, OutlineItem } from '../report/report-domain';
 import type {
   GenerateReportRequest,
   GenerateReportResponse,
@@ -15,7 +12,6 @@ import type {
 } from './ai-schema';
 
 type GenerateOutlineInput = {
-  readonly reportRepository: ReportRepository;
   readonly request: GenerateOutlineRequest;
 };
 
@@ -32,7 +28,9 @@ const normalizeOverview = (overview: string): string => {
   return overview.trim();
 };
 
-const createOutlineItems = (overview: string): readonly OutlineItem[] => {
+type GeneratedOutlineItem = GenerateOutlineResponse['outline']['items'][number];
+
+const createOutlineItems = (overview: string): readonly GeneratedOutlineItem[] => {
   const firstLine = overview.split(/\n+/u)[0]?.trim() ?? '';
   const fallback = '概要の要点';
   const source = firstLine.length > 0 ? firstLine : fallback;
@@ -68,27 +66,6 @@ const createGeneratedOutline = (overview: string): GenerateOutlineResponse => {
   };
 };
 
-const toOutlineEntity = ({
-  generated,
-  normalizedOverview,
-  existing,
-}: {
-  readonly generated: GenerateOutlineResponse;
-  readonly normalizedOverview: string;
-  readonly existing: Outline | null;
-}): Outline => {
-  const createdAt = existing?.createdAt ?? nowIso();
-
-  return {
-    userId: CURRENT_USER_ID,
-    overview: normalizedOverview,
-    title: generated.title,
-    items: generated.outline.items,
-    createdAt,
-    updatedAt: nowIso(),
-  };
-};
-
 const toToneHeader = (tone: GenerateReportRequest['tone']): string => {
   if (tone === 'formal') {
     return '本稿では、以下の構成に沿って要点を整理して述べます。';
@@ -103,19 +80,19 @@ const toToneHeader = (tone: GenerateReportRequest['tone']): string => {
 
 const createReportContent = ({
   tone,
-  outline,
+  generatedOutline,
 }: {
   readonly tone: GenerateReportRequest['tone'];
-  readonly outline: Outline;
+  readonly generatedOutline: GenerateOutlineResponse;
 }): string => {
-  const sections = outline.items
+  const sections = generatedOutline.outline.items
     .map((item) => {
       return `## ${item.order}. ${item.title}\n${item.summary}`;
     })
     .join('\n\n');
 
   return [
-    `# ${outline.title}`,
+    `# ${generatedOutline.title}`,
     '',
     toToneHeader(tone),
     '',
@@ -126,55 +103,28 @@ const createReportContent = ({
 };
 
 const createGeneratedReport = ({
-  outline,
+  overview,
   tone,
 }: {
-  readonly outline: Outline;
+  readonly overview: string;
   readonly tone: GenerateReportRequest['tone'];
 }): GenerateReportResponse => {
+  const generatedOutline = createGeneratedOutline(overview);
+
   return {
     reportId: crypto.randomUUID(),
-    title: outline.title,
-    content: createReportContent({ tone, outline }),
+    title: generatedOutline.title,
+    content: createReportContent({ tone, generatedOutline }),
   };
 };
 
 export const generateOutline = async ({
-  reportRepository,
   request,
 }: GenerateOutlineInput): Promise<
   Result<GenerateOutlineResponse, AppError>
 > => {
-  const existingResult = await reportRepository.findOutlineByUserId({
-    userId: CURRENT_USER_ID,
-  });
-
-  if (existingResult.isErr()) {
-    return err(existingResult.error);
-  }
-
-  const existing = existingResult.value;
-
-  if (existing !== null && request.overwriteExisting !== true) {
-    return err(createConflictError('Outline already exists'));
-  }
-
   const normalizedOverview = normalizeOverview(request.overview);
   const generated = createGeneratedOutline(normalizedOverview);
-  const outline = toOutlineEntity({
-    generated,
-    normalizedOverview,
-    existing,
-  });
-
-  const saveResult = await reportRepository.saveOutlineByUserId({
-    userId: CURRENT_USER_ID,
-    outline,
-  });
-
-  if (saveResult.isErr()) {
-    return err(saveResult.error);
-  }
 
   return ok(generated);
 };
@@ -183,22 +133,8 @@ export const generateReport = async ({
   reportRepository,
   request,
 }: GenerateReportInput): Promise<Result<GenerateReportResponse, AppError>> => {
-  const outlineResult = await reportRepository.findOutlineByUserId({
-    userId: CURRENT_USER_ID,
-  });
-
-  if (outlineResult.isErr()) {
-    return err(outlineResult.error);
-  }
-
-  const outline = outlineResult.value;
-
-  if (outline === null) {
-    return err(createNotFoundError('Outline not found'));
-  }
-
   const generated = createGeneratedReport({
-    outline,
+    overview: request.overview,
     tone: request.tone,
   });
   const now = nowIso();

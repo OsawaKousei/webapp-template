@@ -3,15 +3,11 @@ import {
   generateOutline,
   generateReport,
 } from '../../../../src/features/ai/ai-service';
-import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 
 describe('ai-service', () => {
   test('generateOutline: outline がない場合に生成できる', async () => {
-    const reportRepository = createFakeReportRepository();
-
     const result = await generateOutline({
-      reportRepository,
       request: {
         overview: 'AI レポートの構成案',
         aiMode: 'speed',
@@ -30,28 +26,8 @@ describe('ai-service', () => {
     expect(result.value.outline.items.length).toBeGreaterThan(0);
   });
 
-  test('generateOutline: 既存outlineありでoverwriteExisting未指定はCONFLICT', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '既存概要',
-          title: '既存タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '既存',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
-        },
-      },
-    });
-
-    const result = await generateOutline({
-      reportRepository,
+  test('generateOutline: 同一入力で繰り返し呼んでも成功する', async () => {
+    const first = await generateOutline({
       request: {
         overview: '新しい概要',
         aiMode: 'turbo',
@@ -62,37 +38,28 @@ describe('ai-service', () => {
       },
     });
 
-    expect(result.isErr()).toBe(true);
-    if (result.isOk()) {
-      return;
-    }
-
-    expect(result.error.type).toBe('CONFLICT');
-  });
-
-  test('generateReport: outline から本文を生成して保存できる', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '概要',
-          title: 'タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '要点',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
+    const second = await generateOutline({
+      request: {
+        overview: '新しい概要',
+        aiMode: 'turbo',
+        wordCount: {
+          minWordCount: 1000,
+          maxWordCount: 2000,
         },
       },
     });
 
+    expect(first.isOk()).toBe(true);
+    expect(second.isOk()).toBe(true);
+  });
+
+  test('generateReport: overview から本文を生成して保存できる', async () => {
+    const reportRepository = createFakeReportRepository();
+
     const result = await generateReport({
       reportRepository,
       request: {
+        overview: '概要',
         tone: 'balanced',
       },
     });
@@ -104,23 +71,5 @@ describe('ai-service', () => {
 
     expect(result.value.reportId.length).toBeGreaterThan(0);
     expect(result.value.content.length).toBeGreaterThan(0);
-  });
-
-  test('generateReport: outline がない場合は NOT_FOUND', async () => {
-    const reportRepository = createFakeReportRepository();
-
-    const result = await generateReport({
-      reportRepository,
-      request: {
-        tone: 'formal',
-      },
-    });
-
-    expect(result.isErr()).toBe(true);
-    if (result.isOk()) {
-      return;
-    }
-
-    expect(result.error.type).toBe('NOT_FOUND');
   });
 });

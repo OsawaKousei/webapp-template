@@ -8,14 +8,12 @@
 
 - GET /api/users/me
 - GET /api/users/me/reports
-- GET /api/reports/outline
-- DELETE /api/reports/outline
 - POST /api/ai/generate-outline
+- POST /api/ai/generate-report
 
 この文書の役割:
 
 - API I/O 型の前に、業務上の意味を固定する
-- 単一 Outline の責務境界を固定する
 - 実装時のレイヤ分離を明確化する
 
 ## 2. ドメイン境界
@@ -25,10 +23,9 @@ Phase 1 は以下の3ドメインで構成する。
 - User ドメイン
   - ログイン済みユーザーの最小プロフィール取得
   - ユーザー所有レポート一覧取得
-- Report ドメイン
-  - ユーザー単位の単一 Outline の管理
 - AI ドメイン
   - 目次生成（outline）
+  - 目次を入力として本文生成
 
 依存方向:
 
@@ -75,21 +72,6 @@ Phase 1 は以下の3ドメインで構成する。
 - reportId は空文字不可
 - title は空文字不可
 
-### 4.3 Outline
-
-- userId: UserId
-- overview: string
-- title: string
-- items: OutlineItem[]
-- createdAt: string (ISO8601)
-- updatedAt: string (ISO8601)
-
-不変条件:
-
-- overview は空文字不可
-- title は空文字不可
-- items は 1 件以上
-
 ## 5. 値オブジェクト
 
 ### 5.1 OutlineItem
@@ -119,26 +101,8 @@ Phase 1 は以下の3ドメインで構成する。
 
 ## 6. ライフサイクル
 
-### 6.1 Outline 状態遷移
+### 6.1 画面遷移とドメインイベント
 
-- outline 不在（null）-> outline 存在
-  - トリガ: POST /api/ai/generate-outline 成功
-- outline 存在 -> deleted
-  - トリガ:
-    - DELETE /api/reports/outline
-    - 新規作成時に破棄を選択
-
-### 6.2 Outline の運用ルール
-
-- ユーザーごとに Outline は最大 1 件のみ保持する
-- /home から新規作成開始時、既存 Outline があれば UI で継続/破棄を確認する
-- 破棄選択時は DELETE /api/reports/outline で抹消する
-- 継続選択時に上書き生成する場合は、POST /api/ai/generate-outline に overwriteExisting=true を付与する
-
-### 6.3 画面遷移とドメインイベント
-
-- /home -> /new-report
-  - イベント: OutlinePrepared
 - /new-report 目次生成
   - イベント: OutlineGenerated
 
@@ -154,47 +118,38 @@ Phase 1 は以下の3ドメインで構成する。
 - 入力: なし（認証コンテキスト）
 - 出力: ReportSummary[]
 
-### 7.3 GET /api/reports/outline
-
-- 入力: なし（認証コンテキスト）
-- 出力: Outline | null
-- 仕様:
-  - null は「Outline が保存されていない状態」を意味する
-  - Outline が存在する場合、title と items は必須で返す
-
-### 7.4 DELETE /api/reports/outline
-
-- 入力: なし（認証コンテキスト）
-- 出力: 削除結果
-- 振る舞い:
-  - 既存 Outline を抹消
-
-### 7.5 POST /api/ai/generate-outline
+### 7.3 POST /api/ai/generate-outline
 
 - 入力:
   - overview: string
   - aiMode: AiMode
   - wordCount: WordCountRange
-  - overwriteExisting?: boolean（既存 Outline がある場合のみ有効）
 - 出力:
   - title: string
   - outline: { items: OutlineItem[] }
 - 振る舞い:
-  - 既存 Outline がない場合は新規生成
-  - 既存 Outline がある場合:
-    - overwriteExisting=true なら上書き更新
-    - overwriteExisting が未指定または false なら CONFLICT
+  - リクエスト入力から都度生成して返す
+  - 生成した outline は永続化しない
+
+### 7.4 POST /api/ai/generate-report
+
+- 入力:
+  - overview: string
+  - tone: 'formal' | 'balanced' | 'casual'
+- 出力:
+  - reportId: string
+  - title: string
+  - content: string
+- 振る舞い:
+  - overview から outline を都度生成し、本文を作成する
+  - 生成された report は保存される
 
 ## 8. エラー分類
 
 - VALIDATION_ERROR
   - 必須項目不足、形式不正
-- NOT_FOUND
-  - outline が存在しない
 - FORBIDDEN
   - 他ユーザー資産へのアクセス
-- CONFLICT
-  - 既存 Outline がある状態で overwriteExisting=true なしに上書きを要求
 - INTERNAL_SERVER_ERROR
   - 予期せぬ障害
 

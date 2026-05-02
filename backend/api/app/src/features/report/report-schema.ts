@@ -1,6 +1,4 @@
 export {
-  DeleteOutlineResponseSchema,
-  OutlineSchema,
   QuoteSchema,
   ReferenceSchema,
   ReportDetailSchema,
@@ -10,7 +8,6 @@ export {
 export { ErrorResponseSchema } from '@/shared/types/user';
 
 export type {
-  Outline,
   Quote,
   Reference,
   ReportDetail,

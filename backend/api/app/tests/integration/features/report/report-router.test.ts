@@ -1,10 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { createApp } from '../../../../src/app';
 import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
-import {
-  OutlineSchema,
-  ReportDetailSchema,
-} from '../../../../src/features/report/report-schema';
+import { ReportDetailSchema } from '../../../../src/features/report/report-schema';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
@@ -24,73 +21,6 @@ const userRepository = createFakeUserRepository({
 });
 
 describe('report-router', () => {
-  test('GET /api/reports/outline: outline がない場合 null を返す', async () => {
-    const reportRepository = createFakeReportRepository();
-    const app = createApp({
-      logger,
-      reportRepository,
-      userRepository,
-    });
-
-    const response = await app.request('/api/reports/outline');
-
-    expect(response.status).toBe(200);
-    const json = await response.json();
-    expect(json).toBeNull();
-  });
-
-  test('GET /api/reports/outline: outline がある場合契約を満たす', async () => {
-    const reportRepository = createFakeReportRepository({
-      initialOutlineByUserId: {
-        [CURRENT_USER_ID]: {
-          userId: CURRENT_USER_ID,
-          overview: '概要',
-          title: 'タイトル',
-          items: [
-            {
-              title: '導入',
-              summary: '要点',
-              order: 1,
-            },
-          ],
-          createdAt: '2026-05-01T10:00:00.000Z',
-          updatedAt: '2026-05-01T10:00:00.000Z',
-        },
-      },
-    });
-    const app = createApp({
-      logger,
-      reportRepository,
-      userRepository,
-    });
-
-    const response = await app.request('/api/reports/outline');
-
-    expect(response.status).toBe(200);
-    const json = await response.json();
-    const parsed = OutlineSchema.safeParse(json);
-
-    expect(parsed.success).toBe(true);
-  });
-
-  test('DELETE /api/reports/outline: success を返す', async () => {
-    const reportRepository = createFakeReportRepository();
-    const app = createApp({
-      logger,
-      reportRepository,
-      userRepository,
-    });
-
-    const response = await app.request('/api/reports/outline', {
-      method: 'DELETE',
-    });
-
-    expect(response.status).toBe(200);
-    const json = await response.json();
-
-    expect(json).toEqual({ success: true });
-  });
-
   test('GET /api/reports/:reportId: report がある場合は契約を満たす', async () => {
     const reportRepository = createFakeReportRepository({
       initialReportByReportId: {
