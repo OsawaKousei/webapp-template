@@ -15,7 +15,7 @@ fi
 SQL=$(cat <<'EOSQL'
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-DROP TABLE IF EXISTS report_references CASCADE;
+DROP TABLE IF EXISTS "references" CASCADE;
 DROP TABLE IF EXISTS quotes CASCADE;
 DROP TABLE IF EXISTS outline_items CASCADE;
 DROP TABLE IF EXISTS user_auth_identities CASCADE;
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS report_references (
+CREATE TABLE IF NOT EXISTS "references" (
   id BIGSERIAL PRIMARY KEY,
   report_id UUID NOT NULL REFERENCES reports(report_id) ON DELETE CASCADE,
   quote_id BIGINT NOT NULL REFERENCES quotes(id) ON DELETE RESTRICT,
@@ -109,11 +109,11 @@ CREATE INDEX IF NOT EXISTS idx_outline_items_user_id_order
 CREATE INDEX IF NOT EXISTS idx_user_auth_identities_user_id
   ON user_auth_identities (user_id);
 
-CREATE INDEX IF NOT EXISTS idx_report_references_report_id
-  ON report_references (report_id);
+CREATE INDEX IF NOT EXISTS idx_references_report_id
+  ON "references" (report_id);
 
-CREATE INDEX IF NOT EXISTS idx_report_references_quote_id
-  ON report_references (quote_id);
+CREATE INDEX IF NOT EXISTS idx_references_quote_id
+  ON "references" (quote_id);
 EOSQL
 )
 

@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { match } from 'ts-pattern';
+import type { ReferenceRepository } from './reference-repo';
 import type { ReportRepository } from './report-repo';
 import { getMyReportById, saveMyReportById } from './report-service';
 import {
@@ -11,6 +12,7 @@ import {
 
 type CreateReportRouterInput = {
   readonly reportRepository: ReportRepository;
+  readonly referenceRepository: ReferenceRepository;
 };
 
 const ReportIdParamSchema = z.object({
@@ -86,6 +88,7 @@ const saveReportByIdRoute = createRoute({
 
 export const createReportRouter = ({
   reportRepository,
+  referenceRepository,
 }: CreateReportRouterInput): OpenAPIHono => {
   const reportRouter = new OpenAPIHono();
 
@@ -93,6 +96,7 @@ export const createReportRouter = ({
     const { reportId } = context.req.valid('param');
     const reportResult = await getMyReportById({
       reportRepository,
+      referenceRepository,
       reportId,
     });
 
@@ -123,6 +127,7 @@ export const createReportRouter = ({
     const request = context.req.valid('json');
     const saveResult = await saveMyReportById({
       reportRepository,
+      referenceRepository,
       reportId,
       request,
     });

@@ -7,6 +7,7 @@ import {
 } from '../../../../src/features/user/user-schema';
 import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
+import { createFakeReferenceRepository } from '../../../fakes/fake-reference-repo';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
 
@@ -26,8 +27,10 @@ describe('GET /api/users/me', () => {
       ],
     });
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -44,8 +47,10 @@ describe('GET /api/users/me', () => {
   test('404: NOT_FOUND をエラースキーマで返す', async () => {
     const userRepository = createFakeUserRepository();
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -84,8 +89,10 @@ describe('GET /api/users/me/reports', () => {
       },
     });
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });

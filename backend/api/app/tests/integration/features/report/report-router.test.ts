@@ -3,6 +3,7 @@ import { createApp } from '../../../../src/app';
 import { CURRENT_USER_ID } from '../../../../src/features/auth/current-user';
 import { ReportDetailSchema } from '../../../../src/features/report/report-schema';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
+import { createFakeReferenceRepository } from '../../../fakes/fake-reference-repo';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
 
@@ -29,14 +30,15 @@ describe('report-router', () => {
           userId: CURRENT_USER_ID,
           title: '保存済みタイトル',
           content: '保存済み本文',
-          references: [],
           createdAt: '2026-05-01T10:00:00.000Z',
           updatedAt: '2026-05-01T10:00:00.000Z',
         },
       },
     });
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -52,8 +54,10 @@ describe('report-router', () => {
 
   test('POST /api/reports/:reportId: report を保存できる', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -78,8 +82,10 @@ describe('report-router', () => {
 
   test('POST /api/reports/:reportId: title が空白のみなら 400', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -100,8 +106,10 @@ describe('report-router', () => {
 
   test('GET /api/reports/:reportId: report がない場合は 404', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });

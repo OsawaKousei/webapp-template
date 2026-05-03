@@ -3,6 +3,7 @@ import { createApp } from './app';
 import { env } from './env';
 import { createLogger } from './infrastructure/logging/logger';
 import { createDatabaseClient } from './infrastructure/db/client';
+import { createDrizzleReferenceRepository } from './infrastructure/repositories/drizzle-reference-repository';
 import { createDrizzleReportRepository } from './infrastructure/repositories/drizzle-report-repository';
 import { createDrizzleUserRepository } from './infrastructure/repositories/drizzle-user-repository';
 
@@ -22,14 +23,17 @@ const createRepositories = () => {
   const db = createDatabaseClient({ connectionString });
 
   return {
+    referenceRepository: createDrizzleReferenceRepository({ db }),
     reportRepository: createDrizzleReportRepository({ db }),
     userRepository: createDrizzleUserRepository({ db }),
   };
 };
 
-const { reportRepository, userRepository } = createRepositories();
+const { referenceRepository, reportRepository, userRepository } =
+  createRepositories();
 const app = createApp({
   logger,
+  referenceRepository,
   reportRepository,
   userRepository,
 });

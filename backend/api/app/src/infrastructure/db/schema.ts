@@ -101,8 +101,8 @@ export const quotes = pgTable(
   },
 );
 
-export const reportReferences = pgTable(
-  'report_references',
+export const references = pgTable(
+  'references',
   {
     id: bigserial('id', { mode: 'number' }).primaryKey(),
     reportId: uuid('report_id')
@@ -117,6 +117,6 @@ export const reportReferences = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
   },
   (table) => {
-    return [unique('report_references_quote_id_unique').on(table.quoteId)];
+    return [unique('references_quote_id_unique').on(table.quoteId)];
   },
 );

@@ -116,12 +116,12 @@ CREATE TABLE IF NOT EXISTS quotes (
 );
 ```
 
-### 4.5 report_references
+### 4.5 references
 
 `Reference` 型に対応するテーブルです。1 reference は 1 quote を必ず持つ想定です。
 
 ```sql
-CREATE TABLE IF NOT EXISTS report_references (
+CREATE TABLE IF NOT EXISTS "references" (
   id BIGSERIAL PRIMARY KEY,
   report_id UUID NOT NULL REFERENCES reports(report_id) ON DELETE CASCADE,
   quote_id BIGINT NOT NULL REFERENCES quotes(id) ON DELETE RESTRICT,
@@ -142,11 +142,11 @@ CREATE INDEX IF NOT EXISTS idx_reports_user_id_updated_at
 CREATE INDEX IF NOT EXISTS idx_user_auth_identities_user_id
   ON user_auth_identities (user_id);
 
-CREATE INDEX IF NOT EXISTS idx_report_references_report_id
-  ON report_references (report_id);
+CREATE INDEX IF NOT EXISTS idx_references_report_id
+  ON "references" (report_id);
 
-CREATE INDEX IF NOT EXISTS idx_report_references_quote_id
-  ON report_references (quote_id);
+CREATE INDEX IF NOT EXISTS idx_references_quote_id
+  ON "references" (quote_id);
 ```
 
 ## 6. サンプルデータ投入SQL（仮）
@@ -170,7 +170,7 @@ VALUES (
 ON CONFLICT (report_id) DO NOTHING;
 
 -- 現時点の処理フローでは reference / quote は空で運用可能。
--- 将来拡張時に quotes と report_references の INSERT を追加する。
+-- 将来拡張時に quotes と references の INSERT を追加する。
 ```
 
 ## 7. 初期化手順（仮）

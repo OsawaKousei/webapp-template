@@ -56,4 +56,5 @@ export type Quote = z.infer<typeof QuoteSchema>;
 export type SaveReference = z.infer<typeof SaveReferenceSchema>;
 export type Reference = z.infer<typeof ReferenceSchema>;
 export type Report = z.infer<typeof ReportSchema>;
+export type ReportRecord = Omit<Report, 'references'>;
 export type SaveReportCommand = z.infer<typeof SaveReportCommandSchema>;

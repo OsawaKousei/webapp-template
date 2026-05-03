@@ -6,6 +6,7 @@ import {
   GenerateReportResponseSchema,
 } from '../../../../src/features/ai/ai-schema';
 import { createLogger } from '../../../../src/infrastructure/logging/logger';
+import { createFakeReferenceRepository } from '../../../fakes/fake-reference-repo';
 import { createFakeReportRepository } from '../../../fakes/fake-report-repo';
 import { createFakeUserRepository } from '../../../fakes/fake-user-repo';
 
@@ -26,8 +27,10 @@ const userRepository = createFakeUserRepository({
 describe('POST /api/ai/generate-outline', () => {
   test('200: outline を生成できる', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -56,8 +59,10 @@ describe('POST /api/ai/generate-outline', () => {
 
   test('200: 同じ入力で連続生成しても成功する', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -98,8 +103,10 @@ describe('POST /api/ai/generate-outline', () => {
 
   test('400: overview が空白のみならバリデーションエラー', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -126,8 +133,10 @@ describe('POST /api/ai/generate-outline', () => {
 describe('POST /api/ai/generate-report', () => {
   test('200: overview から本文を生成できる', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -152,8 +161,10 @@ describe('POST /api/ai/generate-report', () => {
 
   test('200: 生成後に GET /api/reports/{reportId} で本文を取得できる', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });
@@ -183,8 +194,10 @@ describe('POST /api/ai/generate-report', () => {
 
   test('400: tone が不正値ならバリデーションエラー', async () => {
     const reportRepository = createFakeReportRepository();
+    const referenceRepository = createFakeReferenceRepository();
     const app = createApp({
       logger,
+      referenceRepository,
       reportRepository,
       userRepository,
     });

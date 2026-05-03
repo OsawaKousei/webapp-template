@@ -8,24 +8,16 @@ import type {
   ReportRepository,
   SaveReportByIdInput,
 } from '../../src/features/report/report-repo';
-import type { Report } from '../../src/features/report/report-domain';
+import type { ReportRecord } from '../../src/features/report/report-domain';
 
 type FakeReportRepoConfig = {
-  readonly initialReportByReportId?: Readonly<Record<string, Report>>;
+  readonly initialReportByReportId?: Readonly<Record<string, ReportRecord>>;
   readonly forceInternalError?: boolean;
 };
 
-const cloneReport = (report: Report): Report => {
+const cloneReport = (report: ReportRecord): ReportRecord => {
   return {
     ...report,
-    references: report.references.map((reference) => {
-      return {
-        ...reference,
-        quote: {
-          ...reference.quote,
-        },
-      };
-    }),
   };
 };
 
@@ -33,7 +25,7 @@ export const createFakeReportRepository = (
   config: FakeReportRepoConfig = {},
 ): ReportRepository => {
   const reportEntries = Object.entries(config.initialReportByReportId ?? {});
-  const reportStore = reportEntries.reduce<Map<string, Report>>(
+  const reportStore = reportEntries.reduce<Map<string, ReportRecord>>(
     (accumulator, [reportId, report]) => {
       accumulator.set(reportId, cloneReport(report));
       return accumulator;
@@ -44,7 +36,7 @@ export const createFakeReportRepository = (
   const findReportById = async ({
     userId,
     reportId,
-  }: FindReportByIdInput): Promise<Result<Report | null, AppError>> => {
+  }: FindReportByIdInput): Promise<Result<ReportRecord | null, AppError>> => {
     if (config.forceInternalError === true) {
       return err(createInternalServerError('forced internal error'));
     }
@@ -64,7 +56,7 @@ export const createFakeReportRepository = (
 
   const saveReportById = async ({
     report,
-  }: SaveReportByIdInput): Promise<Result<Report, AppError>> => {
+  }: SaveReportByIdInput): Promise<Result<ReportRecord, AppError>> => {
     if (config.forceInternalError === true) {
       return err(createInternalServerError('forced internal error'));
     }

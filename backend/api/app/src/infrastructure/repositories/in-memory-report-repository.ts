@@ -5,21 +5,13 @@ import type {
   ReportRepository,
   SaveReportByIdInput,
 } from '../../features/report/report-repo';
-import type { Report } from '../../features/report/report-domain';
+import type { ReportRecord } from '../../features/report/report-domain';
 
-const reportStore = new Map<string, Report>();
+const reportStore = new Map<string, ReportRecord>();
 
-const cloneReport = (report: Report): Report => {
+const cloneReport = (report: ReportRecord): ReportRecord => {
   return {
     ...report,
-    references: report.references.map((reference) => {
-      return {
-        ...reference,
-        quote: {
-          ...reference.quote,
-        },
-      };
-    }),
   };
 };
 
@@ -27,7 +19,7 @@ export const createInMemoryReportRepository = (): ReportRepository => {
   const findReportById = async ({
     userId,
     reportId,
-  }: FindReportByIdInput): Promise<Result<Report | null, AppError>> => {
+  }: FindReportByIdInput): Promise<Result<ReportRecord | null, AppError>> => {
     const report = reportStore.get(reportId);
 
     if (report === undefined) {
@@ -43,7 +35,7 @@ export const createInMemoryReportRepository = (): ReportRepository => {
 
   const saveReportById = async ({
     report,
-  }: SaveReportByIdInput): Promise<Result<Report, AppError>> => {
+  }: SaveReportByIdInput): Promise<Result<ReportRecord, AppError>> => {
     const nextReport = cloneReport(report);
     reportStore.set(nextReport.reportId, nextReport);
 
