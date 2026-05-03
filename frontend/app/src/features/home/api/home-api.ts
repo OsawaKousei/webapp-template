@@ -1,34 +1,25 @@
-import { z } from 'zod';
+import {
+  DeleteReportRequestSchema,
+  DeleteReportResponseSchema,
+  FetchCurrentUserResponseSchema,
+  FetchUserReportsResponseSchema,
+  type FetchCurrentUserResponse,
+  type FetchUserReportsResponse,
+} from '@my-app/types';
 import { requestJsonAsync } from '@/shared/api';
 
-const homeUserSchema = z.object({
-  id: z.string().min(1),
-  displayName: z.string().min(1),
-  email: z.string().min(1),
-  subscriptionPlan: z.string().min(1),
-  credits: z.number().int().min(0),
-});
-
-const reportSchema = z.object({
-  reportId: z.string().min(1),
-  title: z.string().min(1),
-  lastModifiedAt: z.string().min(1),
-});
-
-const reportListSchema = z.array(reportSchema);
-
-type HomeUser = z.infer<typeof homeUserSchema>;
-type HomeReport = z.infer<typeof reportSchema>;
+type HomeUser = FetchCurrentUserResponse;
+type HomeReport = FetchUserReportsResponse[number];
 
 export const fetchHomeUserAsync = async (): Promise<HomeUser> => {
-  return requestJsonAsync({ path: '/api/users/me' }, homeUserSchema);
+  return requestJsonAsync(
+    { path: '/api/users/me' },
+    FetchCurrentUserResponseSchema,
+  );
 };
 
 export const fetchHomeReportsAsync = async (): Promise<readonly HomeReport[]> => {
-  return requestJsonAsync(
-    { path: '/api/users/me/reports' },
-    reportListSchema,
-  );
+  return requestJsonAsync({ path: '/api/users/me/reports' }, FetchUserReportsResponseSchema);
 };
 
 export const createReportAsync = async (): Promise<void> => {
@@ -36,12 +27,14 @@ export const createReportAsync = async (): Promise<void> => {
 };
 
 export const deleteReportAsync = async (reportId: string): Promise<void> => {
+  const request = DeleteReportRequestSchema.parse({ reportId });
+
   await requestJsonAsync(
     {
-      path: `/api/report?reportId=${encodeURIComponent(reportId)}`,
+      path: `/api/report?reportId=${encodeURIComponent(request.reportId)}`,
       method: 'DELETE',
     },
-    z.object({ deleted: z.boolean().optional() }),
+    DeleteReportResponseSchema,
   );
 };
 

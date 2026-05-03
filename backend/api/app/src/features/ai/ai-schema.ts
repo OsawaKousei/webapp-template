@@ -3,7 +3,7 @@ export {
   GenerateReportResponseSchema,
   GenerateOutlineRequestSchema,
   GenerateOutlineResponseSchema,
-} from '@/shared/types/report';
+} from '@/shared/types/ai';
 
 export { ErrorResponseSchema } from '@/shared/types/user';
 
@@ -12,4 +12,4 @@ export type {
   GenerateReportResponse,
   GenerateOutlineRequest,
   GenerateOutlineResponse,
-} from '@/shared/types/report';
+} from '@/shared/types/ai';

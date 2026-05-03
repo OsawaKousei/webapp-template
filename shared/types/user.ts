@@ -14,9 +14,14 @@ export const UserProfileSchema = z.object({
   credits: z.number().int().min(0),
 });
 
+export const FetchCurrentUserResponseSchema = UserProfileSchema;
+
 export const ErrorResponseSchema = z.object({
   error: z.string().min(1),
 });
 
 export type UserProfile = z.infer<typeof UserProfileSchema>;
+export type FetchCurrentUserResponse = z.infer<
+  typeof FetchCurrentUserResponseSchema
+>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;

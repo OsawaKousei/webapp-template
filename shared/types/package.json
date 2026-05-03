@@ -7,7 +7,8 @@
   "exports": {
     ".": "./index.ts",
     "./user": "./user.ts",
-    "./report": "./report.ts"
+    "./report": "./report.ts",
+    "./ai": "./ai.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
