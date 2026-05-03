@@ -40,11 +40,15 @@ export const QuoteSchema = z.object({
   accessDate: z.string().optional(),
 });
 
-export const ReferenceSchema = z.object({
+export const SaveReferenceSchema = z.object({
   id: z.number().int().min(1),
   quote: QuoteSchema,
   content: z.string().min(1),
   object_url: z.string().optional(),
+});
+
+export const ReferenceSchema = SaveReferenceSchema.extend({
+  reportId: z.string().min(1),
 });
 
 export const ReportDetailSchema = z.object({
@@ -60,7 +64,7 @@ export const ReportDetailSchema = z.object({
 export const SaveReportRequestSchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
-  references: z.array(ReferenceSchema).default([]),
+  references: z.array(SaveReferenceSchema).default([]),
 });
 export const SaveReportResponseSchema = ReportDetailSchema;
 export const FetchUserReportsResponseSchema = ReportSummaryListSchema;
@@ -75,6 +79,7 @@ export type ReportSummary = z.infer<typeof ReportSummarySchema>;
 export type OutlineItem = z.infer<typeof OutlineItemSchema>;
 export type QuoteReferenceType = z.infer<typeof QuoteReferenceTypeSchema>;
 export type Quote = z.infer<typeof QuoteSchema>;
+export type SaveReference = z.infer<typeof SaveReferenceSchema>;
 export type Reference = z.infer<typeof ReferenceSchema>;
 export type ReportDetail = z.infer<typeof ReportDetailSchema>;
 export type SaveReportRequest = z.infer<typeof SaveReportRequestSchema>;

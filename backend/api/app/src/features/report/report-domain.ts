@@ -24,11 +24,15 @@ export const QuoteSchema = z.object({
   accessDate: z.string().optional(),
 });
 
-export const ReferenceSchema = z.object({
+export const SaveReferenceSchema = z.object({
   id: z.number().int().min(1),
   quote: QuoteSchema,
   content: z.string().min(1),
   object_url: z.string().optional(),
+});
+
+export const ReferenceSchema = SaveReferenceSchema.extend({
+  reportId: z.string().min(1),
 });
 
 export const ReportSchema = z.object({
@@ -44,11 +48,12 @@ export const ReportSchema = z.object({
 export const SaveReportCommandSchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
-  references: z.array(ReferenceSchema),
+  references: z.array(SaveReferenceSchema),
 });
 
 export type QuoteReferenceType = z.infer<typeof QuoteReferenceTypeSchema>;
 export type Quote = z.infer<typeof QuoteSchema>;
+export type SaveReference = z.infer<typeof SaveReferenceSchema>;
 export type Reference = z.infer<typeof ReferenceSchema>;
 export type Report = z.infer<typeof ReportSchema>;
 export type SaveReportCommand = z.infer<typeof SaveReportCommandSchema>;

@@ -113,6 +113,7 @@ export const createDrizzleReportRepository = ({
     return rows.map((row) => {
       return {
         id: row.referenceId,
+        reportId,
         quote: {
           id: row.quoteId,
           text: row.quoteText,

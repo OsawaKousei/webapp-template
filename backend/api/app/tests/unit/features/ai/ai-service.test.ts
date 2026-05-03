@@ -72,4 +72,5 @@ describe('ai-service', () => {
     expect(result.value.reportId.length).toBeGreaterThan(0);
     expect(result.value.content.length).toBeGreaterThan(0);
   });
+
 });

@@ -2,7 +2,7 @@ import { err, ok, type Result } from 'neverthrow';
 import { createNotFoundError, type AppError } from '@/shared/errors/app-error';
 import { CURRENT_USER_ID } from '../auth/current-user';
 import type { ReportRepository } from './report-repo';
-import type { Report, SaveReportCommand } from './report-domain';
+import type { Report, SaveReference, SaveReportCommand } from './report-domain';
 
 type GetMyReportByIdInput = {
   readonly reportRepository: ReportRepository;
@@ -17,6 +17,31 @@ type SaveMyReportByIdInput = {
 
 const nowIso = (): string => {
   return new Date().toISOString();
+};
+
+const attachReportIdToReference = ({
+  reportId,
+  reference,
+}: {
+  readonly reportId: string;
+  readonly reference: SaveReference;
+}): Report['references'][number] => {
+  return {
+    ...reference,
+    reportId,
+  };
+};
+
+const normalizeReportReferenceReportId = (report: Report): Report => {
+  return {
+    ...report,
+    references: report.references.map((reference) => {
+      return {
+        ...reference,
+        reportId: report.reportId,
+      };
+    }),
+  };
 };
 
 export const getMyReportById = async ({
@@ -38,7 +63,7 @@ export const getMyReportById = async ({
     return err(createNotFoundError('Report not found'));
   }
 
-  return ok(report);
+  return ok(normalizeReportReferenceReportId(report));
 };
 
 export const saveMyReportById = async ({
@@ -63,10 +88,17 @@ export const saveMyReportById = async ({
     userId: CURRENT_USER_ID,
     title: request.title,
     content: request.content,
-    references: request.references,
+    references: request.references.map((reference) => {
+      return attachReportIdToReference({ reportId, reference });
+    }),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
+  const saveResult = await reportRepository.saveReportById({ report: nextReport });
 
-  return reportRepository.saveReportById({ report: nextReport });
+  if (saveResult.isErr()) {
+    return err(saveResult.error);
+  }
+
+  return ok(normalizeReportReferenceReportId(saveResult.value));
 };
