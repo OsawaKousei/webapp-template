@@ -9,31 +9,33 @@ export const NewReportStepToneWidget = () => {
     <div className="space-y-3">
       <Button
         type="button"
-        variant={tone === 'desu-masu' ? 'default' : 'outline'}
+        variant={tone === 'balanced' ? 'default' : 'outline'}
         className="w-full justify-start"
         onClick={() => {
-          actions.setTone('desu-masu');
+          actions.setTone('balanced');
         }}
       >
-        です・ます調
+        バランス（標準）
       </Button>
       <Button
         type="button"
-        variant={tone === 'dearu-da' ? 'default' : 'outline'}
+        variant={tone === 'formal' ? 'default' : 'outline'}
         className="w-full justify-start"
         onClick={() => {
-          actions.setTone('dearu-da');
+          actions.setTone('formal');
         }}
       >
-        である・だ調
+        フォーマル
       </Button>
       <Button
         type="button"
-        variant="outline"
+        variant={tone === 'casual' ? 'default' : 'outline'}
         className="w-full justify-start"
-        disabled
+        onClick={() => {
+          actions.setTone('casual');
+        }}
       >
-        ユーザーの口調に合わせる（近日登場）
+        カジュアル
       </Button>
     </div>
   );

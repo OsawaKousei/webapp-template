@@ -12,6 +12,6 @@ export const initialState: NewReportStoreData = {
   wordCount: '1500',
   aiMode: 'speed',
   uploadedFiles: [],
-  tone: 'desu-masu',
+  tone: 'balanced',
   outline: [],
 };

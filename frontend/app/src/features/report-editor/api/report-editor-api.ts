@@ -49,7 +49,7 @@ export const fetchReportDetailAsync = async (
 ): Promise<ReportDetail> => {
   return requestJsonAsync(
     {
-      path: `/api/report?reportId=${encodeURIComponent(reportId)}`,
+      path: `/api/reports/${encodeURIComponent(reportId)}`,
     },
     reportDetailSchema,
   );

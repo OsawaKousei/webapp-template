@@ -62,7 +62,23 @@ const isOverviewMode = (value: string): value is OverviewMode => {
 };
 
 const isTone = (value: string): value is Tone => {
-  return value === 'desu-masu' || value === 'dearu-da';
+  return value === 'formal' || value === 'balanced' || value === 'casual';
+};
+
+const normalizeStoredTone = (value: string): Tone | null => {
+  if (isTone(value)) {
+    return value;
+  }
+
+  if (value === 'dearu-da') {
+    return 'formal';
+  }
+
+  if (value === 'desu-masu') {
+    return 'balanced';
+  }
+
+  return null;
 };
 
 const isUploadedReference = (value: unknown): value is UploadedReference => {
@@ -215,8 +231,12 @@ export const hydrateState = (): HydratedState => {
 
   const storedTone = storage.getItem(KEY.tone);
 
-  if (storedTone !== null && isTone(storedTone)) {
-    next.tone = storedTone;
+  if (storedTone !== null) {
+    const normalizedTone = normalizeStoredTone(storedTone);
+
+    if (normalizedTone !== null) {
+      next.tone = normalizedTone;
+    }
   }
 
   const storedOutline = parseJson<unknown[]>(storage.getItem(KEY.outline));

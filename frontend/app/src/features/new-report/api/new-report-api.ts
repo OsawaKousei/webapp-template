@@ -43,28 +43,9 @@ type GenerateOutlineArgs = {
 
 type GenerateReportArgs = {
   readonly overview: string;
-  readonly title: string;
-  readonly outline: ReadonlyArray<{
-    readonly order: number;
-    readonly title: string;
-    readonly summary: string;
-  }>;
-  readonly wordCount: string;
-  readonly aiMode: string;
-  readonly tone: string;
-  readonly reference: readonly string[];
-};
-
-const toGenerateReportTone = (tone: string): 'formal' | 'balanced' | 'casual' => {
-  if (tone === 'dearu-da') {
-    return 'formal';
-  }
-
-  if (tone === 'desu-masu') {
-    return 'balanced';
-  }
-
-  return 'balanced';
+  readonly tone: 'formal' | 'balanced' | 'casual';
+  readonly reference_ids: readonly string[];
+  readonly overview_reference_id: string | null;
 };
 
 export const uploadReferenceAsync = async (
@@ -123,7 +104,10 @@ export const generateReportAsync = async (args: GenerateReportArgs) => {
       path: '/api/ai/generate-report',
       method: 'POST',
       body: {
-        tone: toGenerateReportTone(args.tone),
+        overview: args.overview,
+        tone: args.tone,
+        reference_ids: args.reference_ids,
+        overview_reference_id: args.overview_reference_id,
       },
     },
     reportResponseSchema,

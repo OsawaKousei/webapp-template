@@ -1,5 +1,5 @@
 export type OverviewMode = 'text' | 'file';
-export type Tone = 'desu-masu' | 'dearu-da';
+export type Tone = 'formal' | 'balanced' | 'casual';
 
 export type UploadedReference = {
   readonly referenceId: string;

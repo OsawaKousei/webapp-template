@@ -51,7 +51,6 @@ export const NewReportLayout = () => {
   const overviewFile = useNewReportStore((state) => state.overviewFile);
   const wordCount = useNewReportStore((state) => state.wordCount);
   const aiMode = useNewReportStore((state) => state.aiMode);
-  const title = useNewReportStore((state) => state.title);
   const outline = useNewReportStore((state) => state.outline);
   const tone = useNewReportStore((state) => state.tone);
   const uploadedFiles = useNewReportStore((state) => state.uploadedFiles);
@@ -133,27 +132,30 @@ export const NewReportLayout = () => {
   };
 
   const generateAsync = async () => {
+    if (overview.trim().length === 0) {
+      actions.setErrorMessage('概要を入力してください。');
+      return;
+    }
+
     actions.setErrorMessage(null);
     actions.setIsBusy(true);
 
     try {
       const generatedReport = await generateReportAsync({
         overview,
-        title,
-        outline,
-        wordCount,
-        aiMode,
         tone,
-        reference: uploadedFiles.map((item) => {
+        reference_ids: uploadedFiles.map((item) => {
           return item.referenceId;
         }),
+        overview_reference_id: overviewFile?.referenceId ?? null,
       });
 
       actions.clear();
       navigate(`/report/${generatedReport.reportId}`);
-    } catch {
-      actions.clear();
-      navigate('/home');
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'レポート生成に失敗しました。';
+      actions.setErrorMessage(message);
     } finally {
       actions.setIsBusy(false);
     }
