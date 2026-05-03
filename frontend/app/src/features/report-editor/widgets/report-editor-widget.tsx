@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ReportEditorView } from '../components/report-editor-view';
 import {
   chatAsync,
   createReferenceAsync,
@@ -14,6 +13,13 @@ import {
   type ReferenceItem,
   type ReferenceSearchResult,
 } from '../api/report-editor-api';
+import { ReportEditorLayout } from '../layouts/report-editor-layout';
+import { ReportEditorHeaderWidget } from './report-editor-header-widget';
+import { ReportEditorSidePanelWidget } from './report-editor-side-panel-widget';
+import { ReportEditorContentWidget } from './report-editor-content-widget';
+import { ReportEditorChatWidget } from './report-editor-chat-widget';
+import { ReportEditorReferenceSearchDialogWidget } from './report-editor-reference-search-dialog-widget';
+import { ReportEditorExportDialogWidget } from './report-editor-export-dialog-widget';
 
 export const ReportEditorWidget = () => {
   const navigate = useNavigate();
@@ -36,6 +42,7 @@ export const ReportEditorWidget = () => {
   const [referenceSearchResults, setReferenceSearchResults] = useState<
     readonly ReferenceSearchResult[]
   >([]);
+  const [isSidePanelCollapsed, setIsSidePanelCollapsed] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -76,9 +83,7 @@ export const ReportEditorWidget = () => {
     })();
   }, [navigate, reportId]);
 
-  const composedCitationText = useMemo(() => {
-    return citations.join('\n');
-  }, [citations]);
+  const composedCitationText = citations.join('\n');
 
   const markUnsaved = () => {
     setSaveStatus((previous) => {
@@ -87,201 +92,237 @@ export const ReportEditorWidget = () => {
   };
 
   return (
-    <ReportEditorView
-      reportId={reportId}
-      title={title}
-      content={content}
-      aiMode={aiMode}
-      saveStatus={saveStatus}
-      lastSavedAt={lastSavedAt}
-      references={references}
-      citations={citations}
-      chatMessages={chatMessages}
-      chatInput={chatInput}
-      referenceSearchOpen={referenceSearchOpen}
-      referenceSearchQuery={referenceSearchQuery}
-      referenceSearchResults={referenceSearchResults}
-      exportOpen={exportOpen}
-      isBusy={isBusy}
-      errorMessage={errorMessage}
-      onChangeTitle={(value) => {
-        setTitle(value);
-        markUnsaved();
-      }}
-      onChangeContent={(value) => {
-        setContent(value);
-        markUnsaved();
-      }}
-      onChangeAiMode={setAiMode}
-      onSave={() => {
-        void (async () => {
-          try {
-            setIsBusy(true);
-            setSaveStatus('saving');
-            await saveReportAsync({ reportId, title, content });
-            setSaveStatus('saved');
-            setLastSavedAt(new Date());
-          } catch {
-            setErrorMessage('保存に失敗しました。');
-            setSaveStatus('unsaved');
-          } finally {
-            setIsBusy(false);
-          }
-        })();
-      }}
-      onHome={() => {
-        navigate('/home');
-      }}
-      onOpenExport={() => {
-        setExportOpen(true);
-      }}
-      onCloseExport={() => {
-        setExportOpen(false);
-      }}
-      onExport={(format) => {
-        void (async () => {
-          try {
-            await exportReportAsync({ reportId, format });
-            setExportOpen(false);
-          } catch {
-            // API未実装時は何もしない。
-          }
-        })();
-      }}
-      onChatInput={setChatInput}
-      onSendChat={() => {
-        void (async () => {
-          if (chatInput.trim().length === 0) {
-            return;
-          }
-
-          const nextMessages: readonly ChatMessage[] = [
-            ...chatMessages,
-            { role: 'user', content: chatInput },
-          ];
-
-          setChatMessages(nextMessages);
-          setChatInput('');
-
-          try {
-            setIsBusy(true);
-            const answer = await chatAsync({
-              reportId,
-              mode: aiMode,
-              messages: nextMessages,
-            });
-            setChatMessages([
-              ...nextMessages,
-              { role: 'assistant', content: answer },
-            ]);
-          } catch {
-            setChatMessages([
-              ...nextMessages,
-              {
-                role: 'assistant',
-                content: '応答の取得に失敗しました。',
-              },
-            ]);
-          } finally {
-            setIsBusy(false);
-          }
-        })();
-      }}
-      onAddReference={() => {
-        void (async () => {
-          try {
-            const created = await createReferenceAsync({
-              reportId,
-              title: `Reference ${references.length + 1}`,
-            });
-            setReferences([...references, created]);
-            setCitations([...citations, created.citation ?? created.title]);
-            markUnsaved();
-          } catch {
-            // API未実装時は何もしない。
-          }
-        })();
-      }}
-      onDeleteReference={(referenceId) => {
-        void (async () => {
-          try {
-            await deleteReferenceAsync(referenceId);
-          } catch {
-            // API未実装時は何もしない。
-          }
-
-          const nextReferences = references.filter((reference) => {
-            return reference.referenceId !== referenceId;
-          });
-          setReferences(nextReferences);
-          setCitations(
-            nextReferences.map((reference) => {
-              return reference.citation ?? reference.title;
-            }),
-          );
+    <div className="flex h-screen flex-col bg-background">
+      <ReportEditorHeaderWidget
+        reportId={reportId}
+        title={title}
+        aiMode={aiMode}
+        contentLength={content.length}
+        saveStatus={saveStatus}
+        lastSavedAt={lastSavedAt}
+        isBusy={isBusy}
+        onChangeTitle={(value) => {
+          setTitle(value);
           markUnsaved();
-        })();
-      }}
-      onInsertCitations={() => {
-        if (composedCitationText.length === 0) {
-          return;
+        }}
+        onChangeAiMode={setAiMode}
+        onHome={() => {
+          navigate('/home');
+        }}
+        onSave={() => {
+          void (async () => {
+            try {
+              setIsBusy(true);
+              setSaveStatus('saving');
+              await saveReportAsync({ reportId, title, content });
+              setSaveStatus('saved');
+              setLastSavedAt(new Date());
+            } catch {
+              setErrorMessage('保存に失敗しました。');
+              setSaveStatus('unsaved');
+            } finally {
+              setIsBusy(false);
+            }
+          })();
+        }}
+        onOpenExport={() => {
+          setExportOpen(true);
+        }}
+      />
+
+      {errorMessage === null ? null : (
+        <p className="mx-4 mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {errorMessage}
+        </p>
+      )}
+
+      <ReportEditorLayout
+        sidePanel={
+          <ReportEditorSidePanelWidget
+            isCollapsed={isSidePanelCollapsed}
+            references={references}
+            citations={citations}
+            onToggleCollapse={() => {
+              setIsSidePanelCollapsed((previous) => !previous);
+            }}
+            onOpenReferenceSearch={() => {
+              setReferenceSearchOpen(true);
+            }}
+            onRunPlagiarismCheck={() => {
+              setErrorMessage('剽窃チェッカーは現在準備中です。');
+            }}
+            onAddReference={() => {
+              void (async () => {
+                try {
+                  const created = await createReferenceAsync({
+                    reportId,
+                    title: `Reference ${references.length + 1}`,
+                  });
+                  setReferences([...references, created]);
+                  setCitations([
+                    ...citations,
+                    created.citation ?? created.title,
+                  ]);
+                  markUnsaved();
+                } catch {
+                  // API未実装時は何もしない。
+                }
+              })();
+            }}
+            onInsertCitations={() => {
+              if (composedCitationText.length === 0) {
+                return;
+              }
+
+              setContent((previous) => {
+                return `${previous}\n\n${composedCitationText}`.trim();
+              });
+              markUnsaved();
+            }}
+            onCopyCitations={() => {
+              void navigator.clipboard.writeText(composedCitationText);
+            }}
+            onDeleteReference={(referenceId) => {
+              void (async () => {
+                try {
+                  await deleteReferenceAsync(referenceId);
+                } catch {
+                  // API未実装時は何もしない。
+                }
+
+                const nextReferences = references.filter((reference) => {
+                  return reference.referenceId !== referenceId;
+                });
+                setReferences(nextReferences);
+                setCitations(
+                  nextReferences.map((reference) => {
+                    return reference.citation ?? reference.title;
+                  }),
+                );
+                markUnsaved();
+              })();
+            }}
+          />
         }
+        editor={
+          <ReportEditorContentWidget
+            content={content}
+            onChangeContent={(value) => {
+              setContent(value);
+              markUnsaved();
+            }}
+          />
+        }
+        chat={
+          <ReportEditorChatWidget
+            chatMessages={chatMessages}
+            chatInput={chatInput}
+            isBusy={isBusy}
+            onChangeChatInput={setChatInput}
+            onSendChat={() => {
+              void (async () => {
+                if (chatInput.trim().length === 0) {
+                  return;
+                }
 
-        setContent((previous) => {
-          return `${previous}\n\n${composedCitationText}`.trim();
-        });
-        markUnsaved();
-      }}
-      onCopyCitations={() => {
-        void navigator.clipboard.writeText(composedCitationText);
-      }}
-      onOpenReferenceSearch={() => {
-        setReferenceSearchOpen(true);
-      }}
-      onCloseReferenceSearch={() => {
-        setReferenceSearchOpen(false);
-      }}
-      onChangeReferenceSearchQuery={setReferenceSearchQuery}
-      onSearchReference={() => {
-        void (async () => {
-          if (referenceSearchQuery.trim().length === 0) {
-            return;
-          }
+                const nextMessages: readonly ChatMessage[] = [
+                  ...chatMessages,
+                  { role: 'user', content: chatInput },
+                ];
 
-          try {
-            const results = await searchReferenceAsync({
-              reportId,
-              query: referenceSearchQuery,
-            });
-            setReferenceSearchResults(results);
-          } catch {
-            // API未実装時は何もしない。
-          }
-        })();
-      }}
-      onAddReferenceFromSearch={(result) => {
-        const newReference: ReferenceItem = {
-          referenceId: result.id,
-          title: result.title,
-          authors: result.authors,
-          year: result.year,
-          citation: `${result.authors ?? 'Unknown'} (${result.year ?? '-'}) ${result.title}`,
-        };
+                setChatMessages(nextMessages);
+                setChatInput('');
 
-        setReferences([...references, newReference]);
-        setCitations([
-          ...citations,
-          newReference.citation ?? newReference.title,
-        ]);
-        markUnsaved();
-      }}
-      onInsertIndirectQuote={(result) => {
-        const quote = `(${result.authors ?? 'Unknown'}, ${result.year ?? '-'}) ${result.title}`;
-        setContent((previous) => {
-          return `${previous}\n${quote}`.trim();
-        });
-        markUnsaved();
-      }}
-    />
+                try {
+                  setIsBusy(true);
+                  const answer = await chatAsync({
+                    reportId,
+                    mode: aiMode,
+                    messages: nextMessages,
+                  });
+                  setChatMessages([
+                    ...nextMessages,
+                    { role: 'assistant', content: answer },
+                  ]);
+                } catch {
+                  setChatMessages([
+                    ...nextMessages,
+                    {
+                      role: 'assistant',
+                      content: '応答の取得に失敗しました。',
+                    },
+                  ]);
+                } finally {
+                  setIsBusy(false);
+                }
+              })();
+            }}
+          />
+        }
+      />
+
+      <ReportEditorReferenceSearchDialogWidget
+        open={referenceSearchOpen}
+        query={referenceSearchQuery}
+        results={referenceSearchResults}
+        onChangeOpen={setReferenceSearchOpen}
+        onChangeQuery={setReferenceSearchQuery}
+        onSearch={() => {
+          void (async () => {
+            if (referenceSearchQuery.trim().length === 0) {
+              return;
+            }
+
+            try {
+              const results = await searchReferenceAsync({
+                reportId,
+                query: referenceSearchQuery,
+              });
+              setReferenceSearchResults(results);
+            } catch {
+              // API未実装時は何もしない。
+            }
+          })();
+        }}
+        onAddReference={(result) => {
+          const newReference: ReferenceItem = {
+            referenceId: result.id,
+            title: result.title,
+            authors: result.authors,
+            year: result.year,
+            citation: `${result.authors ?? 'Unknown'} (${result.year ?? '-'}) ${result.title}`,
+          };
+
+          setReferences([...references, newReference]);
+          setCitations([
+            ...citations,
+            newReference.citation ?? newReference.title,
+          ]);
+          markUnsaved();
+        }}
+        onInsertIndirectQuote={(result) => {
+          const quote = `(${result.authors ?? 'Unknown'}, ${result.year ?? '-'}) ${result.title}`;
+          setContent((previous) => {
+            return `${previous}\n${quote}`.trim();
+          });
+          markUnsaved();
+        }}
+      />
+
+      <ReportEditorExportDialogWidget
+        open={exportOpen}
+        onChangeOpen={setExportOpen}
+        onExport={(format) => {
+          void (async () => {
+            try {
+              await exportReportAsync({ reportId, format });
+              setExportOpen(false);
+            } catch {
+              // API未実装時は何もしない。
+            }
+          })();
+        }}
+      />
+    </div>
   );
 };
