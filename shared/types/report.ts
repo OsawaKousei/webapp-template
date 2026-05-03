@@ -66,6 +66,9 @@ export const SaveReportRequestSchema = z.object({
   content: z.string().trim().min(1),
   references: z.array(SaveReferenceSchema).default([]),
 });
+export const SaveReportByBodyRequestSchema = SaveReportRequestSchema.extend({
+  reportId: z.string().min(1),
+}).passthrough();
 export const SaveReportResponseSchema = ReportDetailSchema;
 export const FetchUserReportsResponseSchema = ReportSummaryListSchema;
 export const DeleteReportRequestSchema = z.object({
@@ -83,6 +86,9 @@ export type SaveReference = z.infer<typeof SaveReferenceSchema>;
 export type Reference = z.infer<typeof ReferenceSchema>;
 export type ReportDetail = z.infer<typeof ReportDetailSchema>;
 export type SaveReportRequest = z.infer<typeof SaveReportRequestSchema>;
+export type SaveReportByBodyRequest = z.infer<
+  typeof SaveReportByBodyRequestSchema
+>;
 export type SaveReportResponse = z.infer<typeof SaveReportResponseSchema>;
 export type FetchUserReportsResponse = z.infer<
   typeof FetchUserReportsResponseSchema

@@ -7,6 +7,7 @@ import { getMyReportById, saveMyReportById } from './report-service';
 import {
   ErrorResponseSchema,
   ReportDetailSchema,
+  SaveReportByBodyRequestSchema,
   SaveReportRequestSchema,
 } from './report-schema';
 
@@ -86,6 +87,38 @@ const saveReportByIdRoute = createRoute({
   },
 });
 
+const saveReportRoute = createRoute({
+  method: 'post',
+  path: '/report',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: SaveReportByBodyRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Saved Report Detail',
+      content: {
+        'application/json': {
+          schema: ReportDetailSchema,
+        },
+      },
+    },
+    500: {
+      description: 'Internal Server Error',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 export const createReportRouter = ({
   reportRepository,
   referenceRepository,
@@ -130,6 +163,35 @@ export const createReportRouter = ({
       referenceRepository,
       reportId,
       request,
+    });
+
+    return match(saveResult)
+      .when(
+        (result) => result.isOk(),
+        (result) => {
+          return context.json(result.value, 200);
+        },
+      )
+      .otherwise((result) => {
+        if (result.isErr()) {
+          return context.json({ error: result.error.message }, 500);
+        }
+
+        return context.json({ error: 'Internal Server Error' }, 500);
+      });
+  });
+
+  reportRouter.openapi(saveReportRoute, async (context) => {
+    const request = context.req.valid('json');
+    const saveResult = await saveMyReportById({
+      reportRepository,
+      referenceRepository,
+      reportId: request.reportId,
+      request: {
+        title: request.title,
+        content: request.content,
+        references: request.references,
+      },
     });
 
     return match(saveResult)
